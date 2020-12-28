@@ -13,7 +13,7 @@
 #include <pthread.h>
 #include <errno.h>
 
-#define SERVER_PORT 1239
+#define SERVER_PORT 1241
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define CON_LIMIT 3
@@ -49,7 +49,7 @@ struct thread_data_t
     int fileTransferConn;
 };
 
-int createFileTransferConn(char* addr, char* port)
+int createFileTransferConn(char addr[], int port)
 {
     struct sockaddr_in server_addr;
 
@@ -60,7 +60,7 @@ int createFileTransferConn(char* addr, char* port)
     else{
         memset(&server_addr, 0, sizeof(struct sockaddr_in));
         server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(atoi(port));
+        server_addr.sin_port = htons(port);
 
         inet_pton(AF_INET, addr, &(server_addr.sin_addr));
 
@@ -71,6 +71,21 @@ int createFileTransferConn(char* addr, char* port)
         }
     }
     return connSocket;
+}
+
+int transformPortNumber(char p1[], char p2[]){
+    int p1_int = atoi(p1);
+    int p2_int = atoi(p2);
+    char hex1[3];
+    char hex2[3];
+    char hex[6];
+    sprintf(hex1, "%x", p1_int);
+    puts(hex1);
+    sprintf(hex2, "%x", p2_int);
+    puts(hex2);
+    sprintf(hex, "%s%s", hex1, hex2);
+    int port = (int)strtol(hex, NULL, 16);
+    return port;
 }
 
 void *tempClose(void *th_data)
@@ -152,9 +167,11 @@ char* getResponse(char* cmd, int* fileTransferConn)
     // zmienne użyteczne przy przetważaniu komend
     char* response = malloc(100);
     char host[16];
-    char p1[3];
-    char p2[3];
-    char portNum[7];
+    char p1[4];
+    char p2[4];
+//    char portNum[7];
+    int portNum;
+    int increment = 0; // zmienna używana przy komendzie TYPE do odpowiedniego przepisania adresu hosta
     switch (commandCode(cmdCopy))
     {
         case (USER_CMD):
@@ -210,12 +227,15 @@ char* getResponse(char* cmd, int* fileTransferConn)
         case (PORT_CMD):
             for(int i = 0; i < 4; i++){
                 ptr = strtok_r(NULL, ",", &saveptr);
-                if(ptr!=NULL && strlen(ptr) == 3){
-                    for(int j = 0; j<3; j++){
-                        host[j+i] = ptr[j];
+                if(ptr!=NULL){
+                    for(int j = 0; j<strlen(ptr); j++){
+                        host[j+increment] = *(ptr+j);
+                        if(j==strlen(ptr)-1){
+                            if(i!=3) host[j+increment+1]='.';
+                            else host[j+increment+1]='\0';
+                        }
                     }
-                    if(i!=3) host[3+4*i]='.';
-                    else host[15]='\0';
+                    increment += strlen(ptr) + 1;
                 }
                 else{
                     break;
@@ -223,11 +243,20 @@ char* getResponse(char* cmd, int* fileTransferConn)
             }
             ptr = strtok_r(NULL, ",", &saveptr);
             if(ptr!=NULL){
-                strcpy(p1, ptr);
-                ptr = strtok_r(NULL, ",", &saveptr);
+                for(int i = 0; i<3; i++){
+                    if(*(ptr+i)=='\0') break;
+                    p1[i] = *(ptr+i);
+                }
+                p1[3] = '\0';
+                ptr = strtok_r(NULL, delim, &saveptr);
                 if(ptr!=NULL){
-                    strcpy(p2, ptr);
-                    sprintf(portNum, "%s%s", p1, p2);
+                    for(int i = 0; i<3; i++){
+                        if(*(ptr+i)=='\0') break;
+                        p2[i] = *(ptr+i);
+                    }
+                    p2[3] = '\0';
+
+                    portNum = transformPortNumber(p1, p2);
                     *fileTransferConn = createFileTransferConn(host, portNum);
                     if(*fileTransferConn!=-1){
                         return "200 Command okay.\r\n";
