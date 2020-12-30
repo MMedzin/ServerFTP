@@ -12,8 +12,9 @@
 #include <time.h>
 #include <pthread.h>
 #include <errno.h>
+#include <dirent.h>
 
-#define SERVER_PORT 1241
+#define SERVER_PORT 1248
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define CON_LIMIT 3
@@ -21,7 +22,7 @@
 #define USER "test"
 #define PASS "testhaslo"
 
-// command codes
+// kody komend
 #define USER_CMD 1
 #define PASS_CMD 2
 #define SYST_CMD 3
@@ -29,13 +30,16 @@
 #define PWD_CMD 5
 #define TYPE_CMD 6
 #define PORT_CMD 7
+#define LIST_CMD 8
 #define UNKNOWN_CMD -1
 
-// representation types
+// typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
 #define ASCII_TYPE 1
 #define IMAGE_TYPE 2
 #define UNSET_TYPE -1
 
+// zmienne globalne potrzebnych danych
+// TODO - pozbyć się tych zmiennych (singleton)
 int num_of_conns = 0;
 int exitAll = 0;
 int rep_type = UNSET_TYPE;
@@ -47,8 +51,10 @@ struct thread_data_t
     pthread_mutex_t mutex;
     int doExit;
     int fileTransferConn;
+    char* username;
 };
 
+// funkcja nawiązująca połączenie z klientem do przesyłu danych i zwracająca deskryptor połączenia
 int createFileTransferConn(char addr[], int port)
 {
     struct sockaddr_in server_addr;
@@ -73,6 +79,7 @@ int createFileTransferConn(char addr[], int port)
     return connSocket;
 }
 
+// funkcja przekształcająca notację portu ftp do numeru portu w postaci integera
 int transformPortNumber(char p1[], char p2[]){
     int p1_int = atoi(p1);
     int p2_int = atoi(p2);
@@ -88,6 +95,7 @@ int transformPortNumber(char p1[], char p2[]){
     return port;
 }
 
+// funkcja wątku odpowiadającego za wyłączenie serwera po wpisaniu '-1' na konsoli
 void *tempClose(void *th_data)
 {
     pthread_detach(pthread_self());
@@ -120,6 +128,55 @@ void *reading(void *t_data)
     pthread_exit(NULL);
 }
 
+// funkcja odpowiedzialna za wysłanie listy folderu użytkownika; zwraca 0 w przypdku powodzenia i -1 w przypadku porażki
+void *sendList(void *t_data) {
+
+    pthread_detach(pthread_self());
+    struct thread_data_t *th_data = (struct thread_data_t*)t_data;
+
+    DIR *d;
+    struct dirent *dir;
+//    char path[100];
+//    path[0] = '.';
+//    path[1] = '/';
+//    for (int i = 0; i < strlen(user); i++) {
+//        path[i + 2] = user[i];
+//    }
+//    path[strlen(user) + 2] = '/';
+//    path[strlen(user) + 3] = '\0';
+//    d = opendir(path);
+    d = opendir("./");
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            printf("%s\n", dir->d_name);
+            write((*th_data).fileTransferConn, dir->d_name, strlen(dir->d_name));
+        }
+        closedir(d);
+    }
+    write((*th_data).fd, "250 Requested file action okay, completed.", strlen("250 Requested file action okay, completed."));
+    free(th_data);
+    pthread_exit(NULL);
+}
+
+// funkcja tworząca wątek odpowiedzialny za przesłanie listy folderu
+int handleList(char user[], const int* fileTransferConn, int* fd){
+
+    pthread_t thread;
+    struct thread_data_t *t_data = malloc(sizeof(struct thread_data_t));
+    t_data->doExit = 0;
+    t_data->fd = *fd;
+    t_data->username = user;
+    t_data->fileTransferConn = *fileTransferConn;
+    int create_result = 0;
+    create_result = pthread_create(&thread, NULL, sendList, (void *)t_data);
+    if (create_result){
+        printf("Błąd przy próbie utworzenia wątku przesyłania listy, kod błędu: %d\n", create_result);
+        exit(-1);
+    }
+    return 0;
+}
+
+// funkcja rozpoznająca przychodzące komendy ftp i zwracająca odpowidający im kod
 int commandCode(char* cmd)
 {
     printf("CommandCode generation...\n");
@@ -151,13 +208,18 @@ int commandCode(char* cmd)
         printf("PORT cmd recognized\n");
         return PORT_CMD;
     }
+    else if(strcmp(cmd, "LIST") == 0){
+        printf("LIST cmd recognized\n");
+        return LIST_CMD;
+    }
     else{
         printf("Unknown cmd\n");
         return UNKNOWN_CMD;
     }
 }
 
-char* getResponse(char* cmd, int* fileTransferConn)
+// funkcja zwracająca odpoowiedź na daną komendę, a także wywołująca odpowiednie operacje związane z tą komendą
+char* getResponse(char* cmd, int* fileTransferConn, int* fd)
 {
     char cmdCopy[BUF_SIZE];
     strcpy(cmdCopy, cmd);
@@ -172,6 +234,7 @@ char* getResponse(char* cmd, int* fileTransferConn)
 //    char portNum[7];
     int portNum;
     int increment = 0; // zmienna używana przy komendzie TYPE do odpowiedniego przepisania adresu hosta
+    int ifSuccess; // zmienna wykorzystywana przy sprawdzaniu powodzenia wywoływanych funkcji
     switch (commandCode(cmdCopy))
     {
         case (USER_CMD):
@@ -235,7 +298,7 @@ char* getResponse(char* cmd, int* fileTransferConn)
                             else host[j+increment+1]='\0';
                         }
                     }
-                    increment += strlen(ptr) + 1;
+                    increment += (int)strlen(ptr) + 1;
                 }
                 else{
                     break;
@@ -276,6 +339,16 @@ char* getResponse(char* cmd, int* fileTransferConn)
             return "504 Command not implemented for that parameter.\r\n";
             break;
 
+        case (LIST_CMD):
+            if(handleList(USER, fileTransferConn, fd) == 0){
+                return "125 Data connection already open; transfer starting.";
+            }
+            else{
+                return "500 Syntax error, command unrecognized.\r\n";
+            }
+
+            break;
+
         default:
             printf("Wrong cmd: 500 ->\n");
             return "500 Syntax error, command unrecognized.\r\n";
@@ -308,7 +381,7 @@ void *ThreadBehavior(void *t_data)
         buff_read[r] = '\0';
         printf("%s", buff_read);
         // if((buff_write[0] == '-' && buff_write[1] == '1') || (*th_data).doExit==1) break;
-        buff_write = getResponse(buff_read, &(*th_data).fileTransferConn);
+        buff_write = getResponse(buff_read, &(*th_data).fileTransferConn, &(*th_data).fileTransferConn);
         printf("%s", buff_write);
         // pthread_mutex_lock(&(*th_data).mutex);
         write((*th_data).fd, buff_write, strlen(buff_write));
@@ -330,9 +403,9 @@ void handleConnection(int connection_socket_descriptor, pthread_mutex_t t_mutex)
     pthread_t thread1;
 
     //dane, które zostaną przekazane do wątku
-    //TODO dynamiczne utworzenie instancji struktury thread_data_t o nazwie t_data (+ w odpowiednim miejscu zwolnienie pamięci)
+    //dynamiczne utworzenie instancji struktury thread_data_t o nazwie t_data (+ w odpowiednim miejscu zwolnienie pamięci)
     struct thread_data_t *t_data = malloc(sizeof(struct thread_data_t));
-    //TODO wypełnienie pól struktury
+    //wypełnienie pól struktury
     t_data->doExit = 0;
     t_data->fd = connection_socket_descriptor;
     t_data->mutex = t_mutex;
