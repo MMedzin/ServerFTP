@@ -13,13 +13,14 @@
 #include <pthread.h>
 #include <errno.h>
 #include <dirent.h>
+#include <ftw.h>
 
-#define SERVER_PORT 1248
+#define SERVER_PORT 1234
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define CON_LIMIT 3
 
-#define USER "test"
+#define USER "test1"
 #define PASS "testhaslo"
 
 // kody komend
@@ -31,12 +32,12 @@
 #define TYPE_CMD 6
 #define PORT_CMD 7
 #define LIST_CMD 8
-#define UNKNOWN_CMD -1
-
+#define QUIT_CMD 9
+#define UNKNOWN_CMD (-1)
 // typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
 #define ASCII_TYPE 1
 #define IMAGE_TYPE 2
-#define UNSET_TYPE -1
+#define UNSET_TYPE (-1)
 
 // zmienne globalne potrzebnych danych
 // TODO - pozbyć się tych zmiennych (singleton)
@@ -128,38 +129,44 @@ void *reading(void *t_data)
     pthread_exit(NULL);
 }
 
-// funkcja odpowiedzialna za wysłanie listy folderu użytkownika; zwraca 0 w przypdku powodzenia i -1 w przypadku porażki
+// funkcja wątku odpowiedzialnego za wysłanie listy folderu użytkownika
 void *sendList(void *t_data) {
 
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
 
-    DIR *d;
-    struct dirent *dir;
-//    char path[100];
-//    path[0] = '.';
-//    path[1] = '/';
-//    for (int i = 0; i < strlen(user); i++) {
-//        path[i + 2] = user[i];
-//    }
-//    path[strlen(user) + 2] = '/';
-//    path[strlen(user) + 3] = '\0';
-//    d = opendir(path);
-    d = opendir("./");
-    if (d) {
-        while ((dir = readdir(d)) != NULL) {
-            printf("%s\n", dir->d_name);
-            write((*th_data).fileTransferConn, dir->d_name, strlen(dir->d_name));
-        }
-        closedir(d);
+    FILE *fp;
+    char path[1035];
+    char command[100] = "/bin/ls -l ./";
+    strcat(command, (*th_data).username);
+    fp = popen(command, "r");
+    if(fp == NULL) {
+        printf("failes to read directory\n");
     }
-    write((*th_data).fd, "250 Requested file action okay, completed.", strlen("250 Requested file action okay, completed."));
+    else{
+        unsigned long i = 0;
+        while (fgets(path, sizeof(path), fp) != NULL){
+//            strcat(path, "\r\n");
+            i = strlen(path);
+            path[i-1] = '\r';
+            path[i] = '\n';
+            path[i+1] = '\0';
+            write((*th_data).fileTransferConn, path, strlen(path));
+            printf("%s", path);
+        }
+        pclose(fp);
+    }
+
+    close((*th_data).fileTransferConn);
+    write((*th_data).fd, "226 Transfer complete.\r\n", strlen("226 Transfer complete.\r\n"));
+    printf("226 Transfer complete.\r\n");
     free(th_data);
     pthread_exit(NULL);
 }
 
+
 // funkcja tworząca wątek odpowiedzialny za przesłanie listy folderu
-int handleList(char user[], const int* fileTransferConn, int* fd){
+int handleList(char user[], const int* fileTransferConn, const int* fd){
 
     pthread_t thread;
     struct thread_data_t *t_data = malloc(sizeof(struct thread_data_t));
@@ -212,6 +219,10 @@ int commandCode(char* cmd)
         printf("LIST cmd recognized\n");
         return LIST_CMD;
     }
+    else if(strcmp(cmd, "QUIT") == 0){
+        printf("QUIT cmd recognized\n");
+        return QUIT_CMD;
+    }
     else{
         printf("Unknown cmd\n");
         return UNKNOWN_CMD;
@@ -219,7 +230,7 @@ int commandCode(char* cmd)
 }
 
 // funkcja zwracająca odpoowiedź na daną komendę, a także wywołująca odpowiednie operacje związane z tą komendą
-char* getResponse(char* cmd, int* fileTransferConn, int* fd)
+char* getResponse(char* cmd, int* fileTransferConn, int* fd, int *doExit)
 {
     char cmdCopy[BUF_SIZE];
     strcpy(cmdCopy, cmd);
@@ -240,6 +251,8 @@ char* getResponse(char* cmd, int* fileTransferConn, int* fd)
         case (USER_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
             if(strcmp(ptr, USER) == 0){
+                char *dir_name = ptr;
+                mkdir(dir_name, 0777);
                 printf("USER correct, need pass: 331 ->\n");
                 return "331 User name okay, need password.\r\n";
             }
@@ -341,14 +354,17 @@ char* getResponse(char* cmd, int* fileTransferConn, int* fd)
 
         case (LIST_CMD):
             if(handleList(USER, fileTransferConn, fd) == 0){
-                return "125 Data connection already open; transfer starting.";
+                return "150 Opening ASCII mode data connection for file list.\r\n";
             }
             else{
                 return "500 Syntax error, command unrecognized.\r\n";
             }
 
             break;
-
+        case (QUIT_CMD):
+            *doExit = 1;
+            return "221 Service closing control connection.\r\n";
+            break;
         default:
             printf("Wrong cmd: 500 ->\n");
             return "500 Syntax error, command unrecognized.\r\n";
@@ -381,13 +397,16 @@ void *ThreadBehavior(void *t_data)
         buff_read[r] = '\0';
         printf("%s", buff_read);
         // if((buff_write[0] == '-' && buff_write[1] == '1') || (*th_data).doExit==1) break;
-        buff_write = getResponse(buff_read, &(*th_data).fileTransferConn, &(*th_data).fileTransferConn);
+        buff_write = getResponse(buff_read, &(*th_data).fileTransferConn, &(*th_data).fd, &(*th_data).doExit);
         printf("%s", buff_write);
         // pthread_mutex_lock(&(*th_data).mutex);
         write((*th_data).fd, buff_write, strlen(buff_write));
         pthread_mutex_unlock(&(*th_data).mutex);
     }
+    printf("Quitting...\n");
     (*th_data).doExit = 1;
+
+    close((*th_data).fileTransferConn);
 
     free(th_data);
     num_of_conns--;
