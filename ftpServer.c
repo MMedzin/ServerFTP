@@ -36,6 +36,7 @@
 #define RMD_CMD (10)
 #define CWD_CMD 11
 #define CDUP_CMD 12
+#define MKD_CMD 13
 #define UNKNOWN_CMD (-1)
 // typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
 #define ASCII_TYPE 1
@@ -273,6 +274,10 @@ int commandCode(char* cmd)
         printf("CDUP cmd recognized\n");
         return CDUP_CMD;
     }
+    else if(strcmp(cmd, "MKD")==0){
+        printf("MKD cmd recognized\n");
+        return MKD_CMD;
+    }
     else{
         printf("Unknown cmd\n");
         return UNKNOWN_CMD;
@@ -458,7 +463,11 @@ char* getResponse(char* cmd, void *t_data)
         case(CDUP_CMD):
             changeToParentDir(th_data);
             return "200 working directory changed. \r\n";
-
+        case (MKD_CMD):
+            ptr = strtok_r(NULL, delim, &saveptr);
+            mkdir(ptr, 0777);
+            sprintf(response, "257 \"%s\" created\r\n", ptr);
+            return response;
         default:
             printf("Wrong cmd: 500 ->\n");
             return "500 Syntax error, command unrecognized.\r\n";
