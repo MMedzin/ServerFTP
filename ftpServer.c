@@ -15,7 +15,7 @@
 #include <dirent.h>
 #include <ftw.h>
 
-#define SERVER_PORT 1235
+#define SERVER_PORT 1234
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define CON_LIMIT 3
@@ -423,8 +423,10 @@ char* getResponse(char* cmd, void *t_data)
         case (RMD_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
             if(ptr != NULL){
-                char* pathToDir = malloc(sizeof((*th_data).wDir)+sizeof(char)*strlen(ptr));
-                strcpy(pathToDir, (*th_data).wDir);
+                char* pathToDir = calloc(sizeof((*th_data).wDir)+sizeof(char)*strlen(ptr)+2*sizeof(char), sizeof(char));
+                strcat(pathToDir, ".");
+                strcat(pathToDir, (*th_data).wDir);
+                strcat(pathToDir, "/");
                 strcat(pathToDir, ptr);
                 printf("Removing %s...\n", pathToDir);
                 rmdir(pathToDir);
