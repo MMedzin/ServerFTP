@@ -296,14 +296,12 @@ char* getResponse(char* cmd, void *t_data)
     char * saveptr;
     char* ptr = strtok_r(cmdCopy, delim, &saveptr); // 'wycięcie' nazwy komendy
     // zmienne użyteczne przy przetważaniu komend
-    char* response = malloc(100);
+    char* response;
     char host[16];
     char p1[4];
     char p2[4];
 //    char portNum[7];
     int portNum;
-    int increment = 0; // zmienna używana przy komendzie TYPE do odpowiedniego przepisania adresu hosta
-    int ifSuccess; // zmienna wykorzystywana przy sprawdzaniu powodzenia wywoływanych funkcji
     switch (commandCode(cmdCopy))
     {
         case (USER_CMD):
@@ -344,6 +342,7 @@ char* getResponse(char* cmd, void *t_data)
             //     break;
 
         case (PWD_CMD):
+            response = malloc((strlen("257 \"%s\" created\r\n")+strlen((*th_data).wDir))*sizeof(char));
             sprintf(response, "257 \"%s\" created\r\n", (*th_data).wDir);
             return response;
             break;
@@ -366,14 +365,13 @@ char* getResponse(char* cmd, void *t_data)
                 ptr = strtok_r(NULL, ",", &saveptr);
                 if(ptr!=NULL){
                     for(int j = 0; j<strlen(ptr); j++){
-                        host[j+increment] = *(ptr+j);
+                        host[j] = *(ptr+j);
                         if(j==strlen(ptr)-1){
-                            if(i!=3) host[j+increment+1]='.';
-                            else host[j+increment+1]='\0';
+                            if(i!=3) host[j+1]='.';
+                            else host[j+1]='\0';
                         }
                     }
                     printf("\n HOST: %s\n", host);
-                    increment += (int)strlen(ptr) + 1;
                 }
                 else{
                     break;
@@ -382,15 +380,15 @@ char* getResponse(char* cmd, void *t_data)
             ptr = strtok_r(NULL, ",", &saveptr);
             if(ptr!=NULL){
                 for(int i = 0; i<3; i++){
-                    if(*(ptr+i)=='\0') break;
                     p1[i] = *(ptr+i);
+                    if(*(ptr+i)=='\0') break;
                 }
                 p1[3] = '\0';
                 ptr = strtok_r(NULL, delim, &saveptr);
                 if(ptr!=NULL){
                     for(int i = 0; i<3; i++){
-                        if(*(ptr+i)=='\0') break;
                         p2[i] = *(ptr+i);
+                        if(*(ptr+i)=='\0') break;
                     }
                     p2[3] = '\0';
 //                    if((*th_data).fileTransferConn != 0) close((*th_data).fileTransferConn);
@@ -401,17 +399,10 @@ char* getResponse(char* cmd, void *t_data)
                     if((*th_data).fileTransferConn!=-1){
                         return "200 Command okay.\r\n";
                     }
+                    else{
+                        return "500 Invalid port\r\n";
+                    }
                 }
-                return "504 Command not implemented for that parameter.\r\n";
-            }
-
-            if(ptr!=NULL && strlen(ptr) == 3){
-                for(int j = 0; j<3; j++){
-                    host[j] = ptr[j];
-                }
-                host[4]='.';
-                ptr = strtok_r(NULL, ",", &saveptr);
-                return "200 Command okay.\r\n";
             }
             return "504 Command not implemented for that parameter.\r\n";
             break;
@@ -477,6 +468,7 @@ char* getResponse(char* cmd, void *t_data)
             strcat(w, ptr);
             printf("%s", w);
             mkdir(w, 0777);
+            response = malloc((strlen("257 \"%s\" created\r\n")+strlen(ptr))*sizeof(char));
             sprintf(response, "257 \"%s\" created\r\n", ptr);
             return response;
         default:
