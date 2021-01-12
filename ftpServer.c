@@ -15,7 +15,7 @@
 #include <dirent.h>
 #include <ftw.h>
 
-#define SERVER_PORT 1234
+#define SERVER_PORT 1235
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define CON_LIMIT 3
@@ -64,6 +64,7 @@ struct thread_data_t
 // funkcja nawiązująca połączenie z klientem do przesyłu danych i zwracająca deskryptor połączenia
 int createFileTransferConn(char addr[], int port)
 {
+    printf("NUMER PORTU PRZEKAZANY DO FUNKCJI: %d\n", port);
     struct sockaddr_in server_addr;
 
     int connSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -88,8 +89,8 @@ int createFileTransferConn(char addr[], int port)
 
 // funkcja przekształcająca notację portu ftp do numeru portu w postaci integera
 int transformPortNumber(char p1[], char p2[]){
-    int p1_int = atoi(p1);
-    int p2_int = atoi(p2);
+    int p1_int = (int)strtol(p1, NULL, 10);
+    int p2_int = (int)strtol(p2, NULL, 10);
     char hex1[3];
     char hex2[3];
     char hex[6];
@@ -371,6 +372,7 @@ char* getResponse(char* cmd, void *t_data)
                             else host[j+increment+1]='\0';
                         }
                     }
+                    printf("\n HOST: %s\n", host);
                     increment += (int)strlen(ptr) + 1;
                 }
                 else{
@@ -391,8 +393,10 @@ char* getResponse(char* cmd, void *t_data)
                         p2[i] = *(ptr+i);
                     }
                     p2[3] = '\0';
-                    if((*th_data).fileTransferConn != 0) close((*th_data).fileTransferConn);
+//                    if((*th_data).fileTransferConn != 0) close((*th_data).fileTransferConn);
                     portNum = transformPortNumber(p1, p2);
+                    printf("\np1: %s\n", p1);
+                    printf("\np2: %s\n", p2);
                     (*th_data).fileTransferConn = createFileTransferConn(host, portNum);
                     if((*th_data).fileTransferConn!=-1){
                         return "200 Command okay.\r\n";
@@ -465,7 +469,14 @@ char* getResponse(char* cmd, void *t_data)
             return "200 working directory changed. \r\n";
         case (MKD_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
-            mkdir(ptr, 0777);
+            char *w;
+            w= malloc(strlen((*th_data).wDir)*sizeof(char) + strlen(ptr) * sizeof(char)+1);
+            strcpy(w, ".");
+            strcat(w, (*th_data).wDir);
+            strcat(w, "/");
+            strcat(w, ptr);
+            printf("%s", w);
+            mkdir(w, 0777);
             sprintf(response, "257 \"%s\" created\r\n", ptr);
             return response;
         default:
