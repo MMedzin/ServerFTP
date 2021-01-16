@@ -15,7 +15,7 @@
 #include <dirent.h>
 #include <ftw.h>
 
-#define SERVER_PORT 1235
+#define SERVER_PORT 1234
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define CON_LIMIT 3
@@ -37,6 +37,7 @@
 #define CWD_CMD 11
 #define CDUP_CMD 12
 #define MKD_CMD 13
+#define STOR_CMD 14
 #define UNKNOWN_CMD (-1)
 // typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
 #define ASCII_TYPE 1
@@ -279,6 +280,10 @@ int commandCode(char* cmd)
         printf("MKD cmd recognized\n");
         return MKD_CMD;
     }
+    else if(strcmp(cmd, "STOR")==0){
+        printf("STOR cmd recognized\n");
+        return STOR_CMD;
+    }
     else{
         printf("Unknown cmd\n");
         return UNKNOWN_CMD;
@@ -296,12 +301,14 @@ char* getResponse(char* cmd, void *t_data)
     char * saveptr;
     char* ptr = strtok_r(cmdCopy, delim, &saveptr); // 'wycięcie' nazwy komendy
     // zmienne użyteczne przy przetważaniu komend
-    char* response;
+    char* response = malloc(100);
     char host[16];
     char p1[4];
     char p2[4];
 //    char portNum[7];
     int portNum;
+    int increment = 0; // zmienna używana przy komendzie TYPE do odpowiedniego przepisania adresu hosta
+    int ifSuccess; // zmienna wykorzystywana przy sprawdzaniu powodzenia wywoływanych funkcji
     switch (commandCode(cmdCopy))
     {
         case (USER_CMD):
@@ -342,7 +349,6 @@ char* getResponse(char* cmd, void *t_data)
             //     break;
 
         case (PWD_CMD):
-            response = malloc((strlen("257 \"%s\" created\r\n")+strlen((*th_data).wDir))*sizeof(char));
             sprintf(response, "257 \"%s\" created\r\n", (*th_data).wDir);
             return response;
             break;
@@ -365,13 +371,14 @@ char* getResponse(char* cmd, void *t_data)
                 ptr = strtok_r(NULL, ",", &saveptr);
                 if(ptr!=NULL){
                     for(int j = 0; j<strlen(ptr); j++){
-                        host[j] = *(ptr+j);
+                        host[j+increment] = *(ptr+j);
                         if(j==strlen(ptr)-1){
-                            if(i!=3) host[j+1]='.';
-                            else host[j+1]='\0';
+                            if(i!=3) host[j+increment+1]='.';
+                            else host[j+increment+1]='\0';
                         }
                     }
                     printf("\n HOST: %s\n", host);
+                    increment += (int)strlen(ptr) + 1;
                 }
                 else{
                     break;
@@ -399,10 +406,17 @@ char* getResponse(char* cmd, void *t_data)
                     if((*th_data).fileTransferConn!=-1){
                         return "200 Command okay.\r\n";
                     }
-                    else{
-                        return "500 Invalid port\r\n";
-                    }
                 }
+                return "504 Command not implemented for that parameter.\r\n";
+            }
+
+            if(ptr!=NULL && strlen(ptr) == 3){
+                for(int j = 0; j<3; j++){
+                    host[j] = ptr[j];
+                }
+                host[4]='.';
+                ptr = strtok_r(NULL, ",", &saveptr);
+                return "200 Command okay.\r\n";
             }
             return "504 Command not implemented for that parameter.\r\n";
             break;
@@ -468,9 +482,31 @@ char* getResponse(char* cmd, void *t_data)
             strcat(w, ptr);
             printf("%s", w);
             mkdir(w, 0777);
-            response = malloc((strlen("257 \"%s\" created\r\n")+strlen(ptr))*sizeof(char));
             sprintf(response, "257 \"%s\" created\r\n", ptr);
             return response;
+        case (STOR_CMD):
+            ptr = strtok_r(NULL, delim, &saveptr);
+            int n;
+            FILE *fp;
+            char *filename;
+            filename = calloc(sizeof((*th_data).wDir) + sizeof(ptr) + 2, sizeof(char));
+            strcpy(filename, ".");
+            strcat(filename, (*th_data).wDir);
+            strcat(filename, "/");
+            strcat(filename, ptr);
+            printf("%s", filename);
+            char buffer[1024];
+            fp = fopen(filename, "w");
+            while (1) {
+                n = recv((*th_data).fd, buffer, 1024, 0);
+                if (n <= 0){
+                    break;
+                }
+                bzero(buffer, 1024);
+                fprintf(fp,"%s", buffer);
+            }
+            free(filename);
+            return  "200 Command okay.\r\n";
         default:
             printf("Wrong cmd: 500 ->\n");
             return "500 Syntax error, command unrecognized.\r\n";
