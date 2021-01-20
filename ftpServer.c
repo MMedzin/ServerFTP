@@ -14,33 +14,20 @@
 #include <errno.h>
 #include <dirent.h>
 #include <ftw.h>
+#include "thread_data_t.h"
+
+#include "utils.h"
+#include "command_parser.h"
+#include "thread_data_t.h"
+#include "commands.h"
 
 #define SERVER_PORT 1235
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define CON_LIMIT 3
 
-#define USER "test1"
-#define PASS "testhaslo"
 
-// kody komend
-#define USER_CMD 1
-#define PASS_CMD 2
-#define SYST_CMD 3
-#define FEAT_CMD 4
-#define PWD_CMD 5
-#define TYPE_CMD 6
-#define PORT_CMD 7
-#define LIST_CMD 8
-#define QUIT_CMD 9
-#define RMD_CMD (10)
-#define CWD_CMD 11
-#define CDUP_CMD 12
-#define MKD_CMD 13
-#define STOR_CMD 14
-#define DELE_CMD 15
-#define RETR_CMD 16
-#define UNKNOWN_CMD (-1)
+
 // typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
 #define ASCII_TYPE 1
 #define IMAGE_TYPE 2
@@ -53,24 +40,11 @@ int exitAll = 0;
 int rep_type = UNSET_TYPE;
 
 //struktura zawierająca dane, które zostaną przekazane do wątku
-struct thread_data_t
-{
-    int fd;
-    pthread_mutex_t mutex;
-    int doExit;
-    int fileTransferConn;
-    char* fileTransferAddress;
-    int fileTransferPort;
-    int transferMode;
-    char* username;
-    char wDir[1035];
-    char* filename;
-};
+
 
 // funkcja nawiązująca połączenie z klientem do przesyłu danych i zwracająca deskryptor połączenia
 int createFileTransferConn(char addr[], int port)
 {
-    printf("NUMER PORTU PRZEKAZANY DO FUNKCJI: %d\n", port);
     struct sockaddr_in server_addr;
 
     int connSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -93,21 +67,6 @@ int createFileTransferConn(char addr[], int port)
     return connSocket;
 }
 
-// funkcja przekształcająca notację portu ftp do numeru portu w postaci integera
-int transformPortNumber(char p1[], char p2[]){
-    int p1_int = (int)strtol(p1, NULL, 10);
-    int p2_int = (int)strtol(p2, NULL, 10);
-    char hex1[3];
-    char hex2[3];
-    char hex[6];
-    sprintf(hex1, "%x", p1_int);
-    puts(hex1);
-    sprintf(hex2, "%x", p2_int);
-    puts(hex2);
-    sprintf(hex, "%s%s", hex1, hex2);
-    int port = (int)strtol(hex, NULL, 16);
-    return port;
-}
 
 // funkcja wątku odpowiadającego za wyłączenie serwera po wpisaniu '-1' na konsoli
 void *tempClose(void *th_data)
@@ -123,210 +82,13 @@ void *tempClose(void *th_data)
     pthread_exit(NULL);
 }
 
-void *reading(void *t_data)
-{
-    pthread_detach(pthread_self());
-    struct thread_data_t *th_data = (struct thread_data_t*)t_data;
-
-    char buff_read[BUF_SIZE];
-    while(1){
-        // pthread_mutex_lock(&(*th_data).mutex);
-        int r = read((*th_data).fd, buff_read, BUF_SIZE);
-        // pthread_mutex_unlock(&(*th_data).mutex);
-        if(r==0 || (*th_data).doExit==1) break;
-        buff_read[r] = '\0';
-        printf("%s", buff_read);
-    }
-    (*th_data).doExit = 1;
-
-    pthread_exit(NULL);
-}
-
-// funkcja wątku odpowiedzialnego za wysłanie listy folderu użytkownika
-void *sendList(void *t_data) {
-
-    pthread_detach(pthread_self());
-    struct thread_data_t *th_data = (struct thread_data_t*)t_data;
-
-    FILE *fp;
-    char path[1035];
-    char command[1047] = "/bin/ls -l .";
-    strcat(command, (*th_data).wDir);
-    fp = popen(command, "r");
-    if(fp == NULL) {
-        printf("failed to read directory\n");
-    }
-    else{
-        unsigned long i = 0;
-        while (fgets(path, sizeof(path), fp) != NULL){
-//            strcat(path, "\r\n");
-            i = strlen(path);
-            path[i-1] = '\r';
-            path[i] = '\n';
-            path[i+1] = '\0';
-            write((*th_data).fileTransferConn, path, strlen(path));
-        }
-        pclose(fp);
-    }
-
-    close((*th_data).fileTransferConn);
-    write((*th_data).fd, "226 Transfer complete.\r\n", strlen("226 Transfer complete.\r\n"));
-    printf("226 Transfer complete.\r\n");
-    free(th_data);
-    pthread_exit(NULL);
-}
-
-
-// funkcja tworząca wątek odpowiedzialny za przesłanie listy folderu
-int handleList(void *thr_data){
-
-    struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
-
-    pthread_t thread;
-    struct thread_data_t *t_data = malloc(sizeof(struct thread_data_t));
-    t_data->doExit = 0;
-    t_data->fd = (*th_data).fd;
-    t_data->username = (*th_data).username;
-    strcpy(t_data->wDir, (*th_data).wDir);
-    t_data->fileTransferConn = (*th_data).fileTransferConn;
-    int create_result = 0;
-    create_result = pthread_create(&thread, NULL, sendList, (void *)t_data);
-    if (create_result){
-        printf("Błąd przy próbie utworzenia wątku przesyłania listy, kod błędu: %d\n", create_result);
-        exit(-1);
-    }
-    return 0;
-}
 
 
 
-void changeToParentDir(struct thread_data_t *th_data){
-    char * dir = (*th_data).wDir;
-    int d = strlen(dir);
-    int i;
-    char delim = '/';
 
-    for(i=d-1;i>=0;i--){
-        if(dir[i]==delim && i != d-1){
-            break;
-        }
-    }
-
-
-    int toCutLen = d-i;
-    int substrLen = d-toCutLen;
-
-    if(substrLen==0){
-        return;
-    }else {
-        char *substr;
-        substr = (char*) malloc((substrLen + 1)*sizeof(char));
-        substr[substrLen] = '\0';
-        memcpy(substr, dir, substrLen);
-        strcpy((*th_data).wDir, substr);
-        free(substr);
-    }
-
-
-}
-
-int write_file(int fd, char* filename){
-
-    int n;
-    FILE *fp;
-    char buffer[BUF_SIZE];
-
-    fp = fopen(filename, "w");
-    // TODO dodaj tu coś jak sie plik źle otworzy
-    while (1) {
-        n = read(fd, buffer, BUF_SIZE);
-        if (n <= 0){
-            break;
-        }
-        fprintf(fp, "%s", buffer);
-        printf("%s\n", buffer);
-        bzero(buffer, BUF_SIZE);
-        fclose(fp);
-    }
-//    close(fd);
-    return 0;
-}
 
 
 // funkcja rozpoznająca przychodzące komendy ftp i zwracająca odpowidający im kod
-int commandCode(char* cmd)
-{
-    
-    printf("CommandCode generation...\n");
-    if(strcmp(cmd, "USER") == 0){
-        printf("USER cmd recognized\n");
-        return USER_CMD;
-    }
-    else if(strcmp(cmd, "PASS") == 0){
-        printf("PASS cmd recognized\n");
-        return PASS_CMD;
-    }
-    else if(strcmp(cmd, "SYST") == 0){
-        printf("SYST cmd recognized\n");
-        return SYST_CMD;
-    }
-    else if(strcmp(cmd, "PWD") == 0){
-        printf("PWD cmd recognized\n");
-        return PWD_CMD;
-    }
-    else if(strcmp(cmd, "TYPE") == 0){
-        printf("TYPE cmd recognized\n");
-        return TYPE_CMD;
-    }
-    else if(strcmp(cmd, "FEAT") == 0){
-        printf("FEAT cmd recognized\n");
-        return FEAT_CMD;
-    }
-    else if(strcmp(cmd, "PORT") == 0){
-        printf("PORT cmd recognized\n");
-        return PORT_CMD;
-    }
-    else if(strcmp(cmd, "LIST") == 0){
-        printf("LIST cmd recognized\n");
-        return LIST_CMD;
-    }
-    else if(strcmp(cmd, "QUIT") == 0){
-        printf("QUIT cmd recognized\n");
-        return QUIT_CMD;
-    }
-    else if(strcmp(cmd, "RMD") == 0){
-        printf("RMD cmd recognized\n");
-        return RMD_CMD;
-    }
-    else if(strcmp(cmd, "CWD")== 0){
-        printf("CWD cmd recognized\n");
-        return CWD_CMD;
-    }
-    else if(strcmp(cmd, "CDUP")==0){
-        printf("CDUP cmd recognized\n");
-        return CDUP_CMD;
-    }
-    else if(strcmp(cmd, "MKD")==0){
-        printf("MKD cmd recognized\n");
-        return MKD_CMD;
-    }
-    else if(strcmp(cmd, "STOR")==0){
-        printf("STOR cmd recognized\n");
-        return STOR_CMD;
-    }
-    else if(strcmp(cmd, "DELE")==0){
-        printf("DELE cmd recognized\n");
-        return DELE_CMD;
-    }
-    else if(strcmp(cmd, "RETR")==0){
-        printf("RETR cmd recognized\n");
-        return RETR_CMD;
-    }
-    else{
-        printf("Unknown cmd\n");
-        return UNKNOWN_CMD;
-    }
-}
 
 // funkcja zwracająca odpoowiedź na daną komendę, a także wywołująca odpowiednie operacje związane z tą komendą
 char* getResponse(char* cmd, void *t_data)
@@ -337,28 +99,22 @@ char* getResponse(char* cmd, void *t_data)
     strcpy(cmdCopy, cmd);
     char delim[] = " \r";
     char * saveptr;
-    char *filename;
     char* ptr = strtok_r(cmdCopy, delim, &saveptr); // 'wycięcie' nazwy komendy
     // zmienne użyteczne przy przetważaniu komend
     char* response = malloc(100);
     char host[16];
     char p1[4];
     char p2[4];
-//    char portNum[7];
+    char *filename;
     int portNum;
+    int result;
     int increment = 0; // zmienna używana przy komendzie TYPE do odpowiedniego przepisania adresu hosta
-    int ifSuccess; // zmienna wykorzystywana przy sprawdzaniu powodzenia wywoływanych funkcji
     switch (commandCode(cmdCopy))
     {
         case (USER_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
             if(strcmp(ptr, USER) == 0){
-                char *dir_name = ptr;
-                mkdir(dir_name, 0777);
-                (*th_data).username = USER;
-                strcpy((*th_data).wDir, "/");
-                strcat((*th_data).wDir, dir_name);
-                printf("USER correct, need pass: 331 ->\n");
+            user_cmd(th_data, ptr);
                 return "331 User name okay, need password.\r\n";
             }
             else{
@@ -381,16 +137,10 @@ char* getResponse(char* cmd, void *t_data)
 
         case (SYST_CMD):
             return "215 UNIX system type.\n";
-            break;
-
-            // case (FEAT_CMD):
-            //         return "211-Features:\n";
-            //     break;
 
         case (PWD_CMD):
             sprintf(response, "257 \"%s\" created\r\n", (*th_data).wDir);
             return response;
-            break;
 
         case (TYPE_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
@@ -403,7 +153,6 @@ char* getResponse(char* cmd, void *t_data)
                 return "200 Command okay.\r\n";
             }
             return "504 Command not implemented for that parameter.\r\n";
-            break;
 
         case (PORT_CMD):
             for(int i = 0; i < 4; i++){
@@ -457,7 +206,6 @@ char* getResponse(char* cmd, void *t_data)
                 return "200 Command okay.\r\n";
             }
             return "504 Command not implemented for that parameter.\r\n";
-            break;
 
         case (LIST_CMD):
             (*th_data).fileTransferConn = createFileTransferConn((*th_data).fileTransferAddress,
@@ -465,39 +213,32 @@ char* getResponse(char* cmd, void *t_data)
             if((*th_data).fileTransferConn==-1){
                 return "425 Can't open data connection.\r\n";
             }
-            if(handleList(th_data) == 0){
+
+            result = list_cmd(th_data);
+
+            if(result==0){
                 return "150 Opening ASCII mode data connection for file list.\r\n";
             }
             else{
                 return "500 Syntax error, command unrecognized.\r\n";
             }
 
-            break;
         case (QUIT_CMD):
             (*th_data).doExit = 1;
             return "221 Service closing control connection.\r\n";
-            break;
         case (RMD_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
-            if(ptr != NULL){
-                char* pathToDir = calloc(strlen((*th_data).wDir)+strlen(ptr)+2, sizeof(char));
-                strcat(pathToDir, ".");
-                strcat(pathToDir, (*th_data).wDir);
-                strcat(pathToDir, "/");
-                strcat(pathToDir, ptr);
-                printf("Removing %s...\n", pathToDir);
-                rmdir(pathToDir);
-                free(pathToDir);
-                printf("Directory removed\n");
+            result = rmd_cmd(th_data, ptr);
+            if(result ==0) {
                 return "250 Directory removed.\r\n";
             }
+
             return "500 Syntax error.\r\n";
-            break;
         case (CWD_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
             if(ptr != NULL){
                 if(strcmp(ptr, "..") ==0) {
-                    changeToParentDir(th_data);
+                    cdup_cmd(th_data);
                 }
                 else{
                     if(strchr(ptr, '/') != NULL){
@@ -511,22 +252,20 @@ char* getResponse(char* cmd, void *t_data)
 
             }
             return "500 Syntax error.\r\n";
-            break;
         case(CDUP_CMD):
-            changeToParentDir(th_data);
+            cdup_cmd(th_data);
             return "200 working directory changed. \r\n";
         case (MKD_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
-            char *w;
-            w= malloc(strlen((*th_data).wDir)*sizeof(char) + strlen(ptr) * sizeof(char)+1);
-            strcpy(w, ".");
-            strcat(w, (*th_data).wDir);
-            strcat(w, "/");
-            strcat(w, ptr);
-            mkdir(w, 0777);
+            result = mkd_cmd(th_data, ptr);
             sprintf(response, "257 \"%s\" created\r\n", ptr);
-            free(w);
-            return response;
+
+            if(result ==0){
+                return response;
+            }
+            return "501 Syntax error in parameters or arguments.\r\n";
+            
+            
         case (STOR_CMD):
             (*th_data).fileTransferConn = createFileTransferConn((*th_data).fileTransferAddress,
                                                                  (*th_data).fileTransferPort);
@@ -534,32 +273,18 @@ char* getResponse(char* cmd, void *t_data)
                 printf("Tak, to tutaj");
                 return "425 Can't open data connection.\r\n";
             }
-//            char** nameParts = malloc(50*sizeof(char*));
+
             ptr = strtok_r(NULL, delim, &saveptr);
-            filename = calloc(strlen((*th_data).wDir) + strlen(ptr) + 2, sizeof(char));
-            strcpy(filename, ".");
-            strcat(filename, (*th_data).wDir);
-            strcat(filename, "/");
-            strcat(filename, ptr);
-            printf("Nazwa pliku: %s\n", filename);
-            write((th_data)->fd, "150 Opening ASCII mode data connection for file list.\r\n",
-                  strlen("150 Opening ASCII mode data connection for file list.\r\n"));
-            int n = write_file((*th_data).fileTransferConn, filename);
+            int n = stor_cmd(th_data, ptr);
             if(n == 0){
                 return "250 Requested file action successful.\r\n";
             }
             return "552 Requested file action aborted.\r\n";
         case DELE_CMD:
             ptr = strtok_r(NULL, delim, &saveptr);
-            filename = calloc(strlen((*th_data).wDir) + strlen(ptr) + 2, sizeof(char));
-            strcpy(filename, ".");
-            strcat(filename, (*th_data).wDir);
-            strcat(filename, "/");
-            strcat(filename, ptr);
-            int err = remove(filename);
-            free(filename);
+            result = dele_cmd(th_data, ptr);
 
-            if(err!=0){
+            if(result!=0){
                 return "550 Requested action not taken.\r\n";
             }
 
