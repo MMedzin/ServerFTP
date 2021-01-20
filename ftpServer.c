@@ -15,7 +15,7 @@
 #include <dirent.h>
 #include <ftw.h>
 
-#define SERVER_PORT 1234
+#define SERVER_PORT 1235
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define CON_LIMIT 3
@@ -38,6 +38,8 @@
 #define CDUP_CMD 12
 #define MKD_CMD 13
 #define STOR_CMD 14
+#define DELE_CMD 15
+#define RETR_CMD 16
 #define UNKNOWN_CMD (-1)
 // typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
 #define ASCII_TYPE 1
@@ -57,9 +59,12 @@ struct thread_data_t
     pthread_mutex_t mutex;
     int doExit;
     int fileTransferConn;
+    char* fileTransferAddress;
+    int fileTransferPort;
     int transferMode;
     char* username;
     char wDir[1035];
+    char* filename;
 };
 
 // funkcja nawiązująca połączenie z klientem do przesyłu danych i zwracająca deskryptor połączenia
@@ -160,7 +165,6 @@ void *sendList(void *t_data) {
             path[i] = '\n';
             path[i+1] = '\0';
             write((*th_data).fileTransferConn, path, strlen(path));
-            printf("%s", path);
         }
         pclose(fp);
     }
@@ -194,6 +198,8 @@ int handleList(void *thr_data){
     return 0;
 }
 
+
+
 void changeToParentDir(struct thread_data_t *th_data){
     char * dir = (*th_data).wDir;
     int d = strlen(dir);
@@ -224,9 +230,33 @@ void changeToParentDir(struct thread_data_t *th_data){
 
 }
 
+int write_file(int fd, char* filename){
+
+    int n;
+    FILE *fp;
+    char buffer[BUF_SIZE];
+
+    fp = fopen(filename, "w");
+    // TODO dodaj tu coś jak sie plik źle otworzy
+    while (1) {
+        n = read(fd, buffer, BUF_SIZE);
+        if (n <= 0){
+            break;
+        }
+        fprintf(fp, "%s", buffer);
+        printf("%s\n", buffer);
+        bzero(buffer, BUF_SIZE);
+        fclose(fp);
+    }
+//    close(fd);
+    return 0;
+}
+
+
 // funkcja rozpoznająca przychodzące komendy ftp i zwracająca odpowidający im kod
 int commandCode(char* cmd)
 {
+    
     printf("CommandCode generation...\n");
     if(strcmp(cmd, "USER") == 0){
         printf("USER cmd recognized\n");
@@ -284,6 +314,14 @@ int commandCode(char* cmd)
         printf("STOR cmd recognized\n");
         return STOR_CMD;
     }
+    else if(strcmp(cmd, "DELE")==0){
+        printf("DELE cmd recognized\n");
+        return DELE_CMD;
+    }
+    else if(strcmp(cmd, "RETR")==0){
+        printf("RETR cmd recognized\n");
+        return RETR_CMD;
+    }
     else{
         printf("Unknown cmd\n");
         return UNKNOWN_CMD;
@@ -299,6 +337,7 @@ char* getResponse(char* cmd, void *t_data)
     strcpy(cmdCopy, cmd);
     char delim[] = " \r";
     char * saveptr;
+    char *filename;
     char* ptr = strtok_r(cmdCopy, delim, &saveptr); // 'wycięcie' nazwy komendy
     // zmienne użyteczne przy przetważaniu komend
     char* response = malloc(100);
@@ -400,12 +439,11 @@ char* getResponse(char* cmd, void *t_data)
                     p2[3] = '\0';
 //                    if((*th_data).fileTransferConn != 0) close((*th_data).fileTransferConn);
                     portNum = transformPortNumber(p1, p2);
-                    printf("\np1: %s\n", p1);
-                    printf("\np2: %s\n", p2);
-                    (*th_data).fileTransferConn = createFileTransferConn(host, portNum);
-                    if((*th_data).fileTransferConn!=-1){
-                        return "200 Command okay.\r\n";
-                    }
+                    free((*th_data).fileTransferAddress);
+                    (*th_data).fileTransferAddress = malloc(sizeof(host));
+                    strcpy((*th_data).fileTransferAddress, host);
+                    (*th_data).fileTransferPort = portNum;
+                    return "200 Command okay.\r\n";
                 }
                 return "504 Command not implemented for that parameter.\r\n";
             }
@@ -422,6 +460,11 @@ char* getResponse(char* cmd, void *t_data)
             break;
 
         case (LIST_CMD):
+            (*th_data).fileTransferConn = createFileTransferConn((*th_data).fileTransferAddress,
+                                                                 (*th_data).fileTransferPort);
+            if((*th_data).fileTransferConn==-1){
+                return "425 Can't open data connection.\r\n";
+            }
             if(handleList(th_data) == 0){
                 return "150 Opening ASCII mode data connection for file list.\r\n";
             }
@@ -437,7 +480,7 @@ char* getResponse(char* cmd, void *t_data)
         case (RMD_CMD):
             ptr = strtok_r(NULL, delim, &saveptr);
             if(ptr != NULL){
-                char* pathToDir = calloc(sizeof((*th_data).wDir)+sizeof(char)*strlen(ptr)+2*sizeof(char), sizeof(char));
+                char* pathToDir = calloc(strlen((*th_data).wDir)+strlen(ptr)+2, sizeof(char));
                 strcat(pathToDir, ".");
                 strcat(pathToDir, (*th_data).wDir);
                 strcat(pathToDir, "/");
@@ -480,33 +523,48 @@ char* getResponse(char* cmd, void *t_data)
             strcat(w, (*th_data).wDir);
             strcat(w, "/");
             strcat(w, ptr);
-            printf("%s", w);
             mkdir(w, 0777);
             sprintf(response, "257 \"%s\" created\r\n", ptr);
+            free(w);
             return response;
         case (STOR_CMD):
+            (*th_data).fileTransferConn = createFileTransferConn((*th_data).fileTransferAddress,
+                                                                 (*th_data).fileTransferPort);
+            if((*th_data).fileTransferConn==-1){
+                printf("Tak, to tutaj");
+                return "425 Can't open data connection.\r\n";
+            }
+//            char** nameParts = malloc(50*sizeof(char*));
             ptr = strtok_r(NULL, delim, &saveptr);
-            int n;
-            FILE *fp;
-            char *filename;
-            filename = calloc(sizeof((*th_data).wDir) + sizeof(ptr) + 2, sizeof(char));
+            filename = calloc(strlen((*th_data).wDir) + strlen(ptr) + 2, sizeof(char));
             strcpy(filename, ".");
             strcat(filename, (*th_data).wDir);
             strcat(filename, "/");
             strcat(filename, ptr);
-            printf("%s", filename);
-            char buffer[1024];
-            fp = fopen(filename, "w");
-            while (1) {
-                n = recv((*th_data).fd, buffer, 1024, 0);
-                if (n <= 0){
-                    break;
-                }
-                bzero(buffer, 1024);
-                fprintf(fp,"%s", buffer);
+            printf("Nazwa pliku: %s\n", filename);
+            write((th_data)->fd, "150 Opening ASCII mode data connection for file list.\r\n",
+                  strlen("150 Opening ASCII mode data connection for file list.\r\n"));
+            int n = write_file((*th_data).fileTransferConn, filename);
+            if(n == 0){
+                return "250 Requested file action successful.\r\n";
             }
+            return "552 Requested file action aborted.\r\n";
+        case DELE_CMD:
+            ptr = strtok_r(NULL, delim, &saveptr);
+            filename = calloc(strlen((*th_data).wDir) + strlen(ptr) + 2, sizeof(char));
+            strcpy(filename, ".");
+            strcat(filename, (*th_data).wDir);
+            strcat(filename, "/");
+            strcat(filename, ptr);
+            int err = remove(filename);
             free(filename);
-            return  "200 Command okay.\r\n";
+
+            if(err!=0){
+                return "550 Requested action not taken.\r\n";
+            }
+
+            return "250 Requested file action okay, completed.\r\n";
+
         default:
             printf("Wrong cmd: 500 ->\n");
             return "500 Syntax error, command unrecognized.\r\n";
