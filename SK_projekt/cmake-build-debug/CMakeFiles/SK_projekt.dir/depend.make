@@ -13,7 +13,6 @@ CMakeFiles/SK_projekt.dir/main.c.o: ../command_parser.h
 CMakeFiles/SK_projekt.dir/main.c.o: ../commands.h
 CMakeFiles/SK_projekt.dir/main.c.o: ../main.c
 CMakeFiles/SK_projekt.dir/main.c.o: ../thread_data_t.h
-CMakeFiles/SK_projekt.dir/main.c.o: ../utils.h
 
 CMakeFiles/SK_projekt.dir/utils.c.o: ../utils.c
 

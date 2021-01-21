@@ -44,20 +44,29 @@ int stor_cmd(void *thr_data, char* ptr){
 
     FILE *fp;
     char buffer[BUF_SIZE];
+    char bigBuffer[1000*BUF_SIZE];
 
     fp = fopen(filename, "w");
-    // TODO dodaj tu coś jak sie plik źle otworzy
-    int n;
-    n = read((*th_data).fd, buffer, BUF_SIZE);
+    // TODO dodaj tu coś jak się plik źle otworzy
+    int n = read((*th_data).fileTransferConn, buffer, BUF_SIZE);
+    buffer[n] = '\0';
+    strcpy(bigBuffer, buffer);
+    while(n>0){
+        bzero(buffer, BUF_SIZE);
+        n = read((*th_data).fileTransferConn, buffer, BUF_SIZE);
+        buffer[n]='\0';
+        strcat(bigBuffer, buffer);
+    }
     // TODO jak coś się źle odczyta
-    strcat(buffer, "\0");
+    strcat(bigBuffer, "\0");
 
-    fprintf(fp, "%s", buffer);
-    printf("%s\n", buffer);
+    fprintf(fp, "%s", bigBuffer);
+    printf("%s\n", bigBuffer);
     bzero(buffer, BUF_SIZE);
+    bzero(bigBuffer, 1000*BUF_SIZE);
     fclose(fp);
 
-    close((*th_data).fd);
+//    close((*th_data).fd);
     return 0;
 }
 

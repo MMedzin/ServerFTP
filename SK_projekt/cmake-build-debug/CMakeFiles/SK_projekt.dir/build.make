@@ -54,19 +54,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /home/marysia/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.6682.181/bin/cmake/linux/bin/cmake
+CMAKE_COMMAND = /home/michal/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.6682.181/bin/cmake/linux/bin/cmake
 
 # The command to remove a file.
-RM = /home/marysia/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.6682.181/bin/cmake/linux/bin/cmake -E rm -f
+RM = /home/michal/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.6682.181/bin/cmake/linux/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/marysia/CLionProjects/SK_projekt
+CMAKE_SOURCE_DIR = /home/michal/CLionProjects/SK_projekt
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/marysia/CLionProjects/SK_projekt/cmake-build-debug
+CMAKE_BINARY_DIR = /home/michal/CLionProjects/SK_projekt/cmake-build-debug
 
 # Include any dependencies generated for this target.
 include CMakeFiles/SK_projekt.dir/depend.make
@@ -79,55 +79,55 @@ include CMakeFiles/SK_projekt.dir/flags.make
 
 CMakeFiles/SK_projekt.dir/main.c.o: CMakeFiles/SK_projekt.dir/flags.make
 CMakeFiles/SK_projekt.dir/main.c.o: ../main.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/SK_projekt.dir/main.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/SK_projekt.dir/main.c.o   -c /home/marysia/CLionProjects/SK_projekt/main.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/michal/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/SK_projekt.dir/main.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/SK_projekt.dir/main.c.o   -c /home/michal/CLionProjects/SK_projekt/main.c
 
 CMakeFiles/SK_projekt.dir/main.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/SK_projekt.dir/main.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/marysia/CLionProjects/SK_projekt/main.c > CMakeFiles/SK_projekt.dir/main.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/michal/CLionProjects/SK_projekt/main.c > CMakeFiles/SK_projekt.dir/main.c.i
 
 CMakeFiles/SK_projekt.dir/main.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/SK_projekt.dir/main.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/marysia/CLionProjects/SK_projekt/main.c -o CMakeFiles/SK_projekt.dir/main.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/SK_projekt/main.c -o CMakeFiles/SK_projekt.dir/main.c.s
 
 CMakeFiles/SK_projekt.dir/utils.c.o: CMakeFiles/SK_projekt.dir/flags.make
 CMakeFiles/SK_projekt.dir/utils.c.o: ../utils.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/SK_projekt.dir/utils.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/SK_projekt.dir/utils.c.o   -c /home/marysia/CLionProjects/SK_projekt/utils.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/michal/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/SK_projekt.dir/utils.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/SK_projekt.dir/utils.c.o   -c /home/michal/CLionProjects/SK_projekt/utils.c
 
 CMakeFiles/SK_projekt.dir/utils.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/SK_projekt.dir/utils.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/marysia/CLionProjects/SK_projekt/utils.c > CMakeFiles/SK_projekt.dir/utils.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/michal/CLionProjects/SK_projekt/utils.c > CMakeFiles/SK_projekt.dir/utils.c.i
 
 CMakeFiles/SK_projekt.dir/utils.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/SK_projekt.dir/utils.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/marysia/CLionProjects/SK_projekt/utils.c -o CMakeFiles/SK_projekt.dir/utils.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/SK_projekt/utils.c -o CMakeFiles/SK_projekt.dir/utils.c.s
 
 CMakeFiles/SK_projekt.dir/command_parser.c.o: CMakeFiles/SK_projekt.dir/flags.make
 CMakeFiles/SK_projekt.dir/command_parser.c.o: ../command_parser.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/SK_projekt.dir/command_parser.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/SK_projekt.dir/command_parser.c.o   -c /home/marysia/CLionProjects/SK_projekt/command_parser.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/michal/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/SK_projekt.dir/command_parser.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/SK_projekt.dir/command_parser.c.o   -c /home/michal/CLionProjects/SK_projekt/command_parser.c
 
 CMakeFiles/SK_projekt.dir/command_parser.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/SK_projekt.dir/command_parser.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/marysia/CLionProjects/SK_projekt/command_parser.c > CMakeFiles/SK_projekt.dir/command_parser.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/michal/CLionProjects/SK_projekt/command_parser.c > CMakeFiles/SK_projekt.dir/command_parser.c.i
 
 CMakeFiles/SK_projekt.dir/command_parser.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/SK_projekt.dir/command_parser.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/marysia/CLionProjects/SK_projekt/command_parser.c -o CMakeFiles/SK_projekt.dir/command_parser.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/SK_projekt/command_parser.c -o CMakeFiles/SK_projekt.dir/command_parser.c.s
 
 CMakeFiles/SK_projekt.dir/commands.c.o: CMakeFiles/SK_projekt.dir/flags.make
 CMakeFiles/SK_projekt.dir/commands.c.o: ../commands.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/SK_projekt.dir/commands.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/SK_projekt.dir/commands.c.o   -c /home/marysia/CLionProjects/SK_projekt/commands.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/michal/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/SK_projekt.dir/commands.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/SK_projekt.dir/commands.c.o   -c /home/michal/CLionProjects/SK_projekt/commands.c
 
 CMakeFiles/SK_projekt.dir/commands.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/SK_projekt.dir/commands.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/marysia/CLionProjects/SK_projekt/commands.c > CMakeFiles/SK_projekt.dir/commands.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/michal/CLionProjects/SK_projekt/commands.c > CMakeFiles/SK_projekt.dir/commands.c.i
 
 CMakeFiles/SK_projekt.dir/commands.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/SK_projekt.dir/commands.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/marysia/CLionProjects/SK_projekt/commands.c -o CMakeFiles/SK_projekt.dir/commands.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/SK_projekt/commands.c -o CMakeFiles/SK_projekt.dir/commands.c.s
 
 # Object files for target SK_projekt
 SK_projekt_OBJECTS = \
@@ -145,7 +145,7 @@ SK_projekt: CMakeFiles/SK_projekt.dir/command_parser.c.o
 SK_projekt: CMakeFiles/SK_projekt.dir/commands.c.o
 SK_projekt: CMakeFiles/SK_projekt.dir/build.make
 SK_projekt: CMakeFiles/SK_projekt.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking C executable SK_projekt"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/michal/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking C executable SK_projekt"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/SK_projekt.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -158,6 +158,6 @@ CMakeFiles/SK_projekt.dir/clean:
 .PHONY : CMakeFiles/SK_projekt.dir/clean
 
 CMakeFiles/SK_projekt.dir/depend:
-	cd /home/marysia/CLionProjects/SK_projekt/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/marysia/CLionProjects/SK_projekt /home/marysia/CLionProjects/SK_projekt /home/marysia/CLionProjects/SK_projekt/cmake-build-debug /home/marysia/CLionProjects/SK_projekt/cmake-build-debug /home/marysia/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles/SK_projekt.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/michal/CLionProjects/SK_projekt/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/michal/CLionProjects/SK_projekt /home/michal/CLionProjects/SK_projekt /home/michal/CLionProjects/SK_projekt/cmake-build-debug /home/michal/CLionProjects/SK_projekt/cmake-build-debug /home/michal/CLionProjects/SK_projekt/cmake-build-debug/CMakeFiles/SK_projekt.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/SK_projekt.dir/depend
 

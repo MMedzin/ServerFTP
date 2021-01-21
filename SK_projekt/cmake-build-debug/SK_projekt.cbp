@@ -8,38 +8,38 @@
 		<Option virtualFolders="CMake Files\;"/>
 		<Build>
 			<Target title="all">
-				<Option working_dir="/home/marysia/CLionProjects/SK_projekt/cmake-build-debug"/>
+				<Option working_dir="/home/michal/CLionProjects/SK_projekt/cmake-build-debug"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
-					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="edit_cache">
-				<Option working_dir="/home/marysia/CLionProjects/SK_projekt/cmake-build-debug"/>
+				<Option working_dir="/home/michal/CLionProjects/SK_projekt/cmake-build-debug"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
-					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="rebuild_cache">
-				<Option working_dir="/home/marysia/CLionProjects/SK_projekt/cmake-build-debug"/>
+				<Option working_dir="/home/michal/CLionProjects/SK_projekt/cmake-build-debug"/>
 				<Option type="4"/>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
-					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="SK_projekt">
-				<Option output="/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/SK_projekt" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/marysia/CLionProjects/SK_projekt/cmake-build-debug"/>
+				<Option output="/home/michal/CLionProjects/SK_projekt/cmake-build-debug/SK_projekt" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/michal/CLionProjects/SK_projekt/cmake-build-debug"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
 				<Option compiler="gcc"/>
@@ -50,15 +50,15 @@
 					<Add directory="/usr/include"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 SK_projekt"/>
-					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 SK_projekt"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 			<Target title="SK_projekt/fast">
-				<Option output="/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/SK_projekt" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="/home/marysia/CLionProjects/SK_projekt/cmake-build-debug"/>
+				<Option output="/home/michal/CLionProjects/SK_projekt/cmake-build-debug/SK_projekt" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/michal/CLionProjects/SK_projekt/cmake-build-debug"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
 				<Option compiler="gcc"/>
@@ -69,38 +69,38 @@
 					<Add directory="/usr/include"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 SK_projekt/fast"/>
-					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/make -j12 -f &quot;/home/marysia/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 SK_projekt/fast"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/michal/CLionProjects/SK_projekt/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/command_parser.c">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/command_parser.c">
 			<Option target="SK_projekt"/>
 		</Unit>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/command_parser.h">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/command_parser.h">
 			<Option target="SK_projekt"/>
 		</Unit>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/commands.c">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/commands.c">
 			<Option target="SK_projekt"/>
 		</Unit>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/commands.h">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/commands.h">
 			<Option target="SK_projekt"/>
 		</Unit>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/main.c">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/main.c">
 			<Option target="SK_projekt"/>
 		</Unit>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/thread_data_t.h">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/thread_data_t.h">
 			<Option target="SK_projekt"/>
 		</Unit>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/utils.c">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/utils.c">
 			<Option target="SK_projekt"/>
 		</Unit>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/utils.h">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/utils.h">
 			<Option target="SK_projekt"/>
 		</Unit>
-		<Unit filename="/home/marysia/CLionProjects/SK_projekt/CMakeLists.txt">
+		<Unit filename="/home/michal/CLionProjects/SK_projekt/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
 	</Project>
