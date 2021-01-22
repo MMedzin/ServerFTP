@@ -219,8 +219,12 @@ char *getResponse(char *cmd, void *t_data) {
 
             return "500 Syntax error.\r\n";
         case (CDUP_CMD):
-            cdup_cmd(th_data);
-            return "200 working directory changed. \r\n";
+            result = cdup_cmd(th_data);
+            if(result==0){
+                return "200 working directory changed.\r\n";
+            }
+
+            return "500 Syntax error.\r\n";
         case (MKD_CMD):
             cmd_cut = strtok_r(NULL, delim, &saveptr);
             result = mkd_cmd(th_data, cmd_cut);
@@ -244,7 +248,7 @@ char *getResponse(char *cmd, void *t_data) {
             }
 
             cmd_cut = strtok_r(NULL, delim, &saveptr);
-            result = stor_cmd(th_data, cmd_cut);
+            result = stor_cmd(th_data, cmd_cut, th_data->transferMode);
             if (result == 0) {
                 return "250 Requested file action successful.\r\n";
             }

@@ -28,7 +28,7 @@ int user_cmd(void *thr_data, char* args){
     return 0;
 }
 
-int stor_cmd(void *thr_data, char* args){
+int stor_cmd(void *thr_data, char *args, int data_type) {
 
 //            char** nameParts = malloc(50*sizeof(char*));
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
@@ -40,34 +40,51 @@ int stor_cmd(void *thr_data, char* args){
     strcat(filename, args);
     printf("Nazwa pliku: %s\n", filename);
 
-
+    printf("TRYB PRZESYŁANIA W FUNKCJI: %d\n", th_data->transferMode);
     FILE *fp;
     char buffer[BUF_SIZE];
-    char bigBuffer[1000*BUF_SIZE];
+    char big_buffer[1000 * BUF_SIZE];
 
-    fp = fopen(filename, "w");
+    if(data_type==1) {
+        fp = fopen(filename, "w");
+    }else if(data_type ==2){
+        fp = fopen(filename, "wb");
+    }else{
+        return -1;
+    }
+
     if(ferror(fp)!=0){
         printf("Nie można otworzyć pliku: %s\r\n", filename);
         free(filename);
         return -1;
     }
     // TODO dodaj tu coś jak się plik źle otworzy
-    int n = (int) read((*th_data).fileTransferConn, buffer, BUF_SIZE);
-    buffer[n] = '\0';
-    strcpy(bigBuffer, buffer);
-    while(n>0){
+    int rec_bytes;
+    int sum = 0;
+    while(1){
         bzero(buffer, BUF_SIZE);
-        n = (int) read((*th_data).fileTransferConn, buffer, BUF_SIZE);
-        buffer[n]='\0';
-        strcat(bigBuffer, buffer);
+        rec_bytes = (int) read((*th_data).fileTransferConn, buffer, BUF_SIZE);
+        if(rec_bytes<=0){
+            break;
+        }
+        buffer[rec_bytes] = '\0';
+
+        if(sum==0){
+            strcpy(big_buffer, buffer);
+        }else {
+            strcat(big_buffer, buffer);
+        }
+        printf("%d: Buffer: %s BigBuffer: %s", sum, buffer, big_buffer);
+        sum+=rec_bytes;
     }
     // TODO jak coś się źle odczyta
-    strcat(bigBuffer, "\0");
+    strcat(big_buffer, "\0");
 
-    fprintf(fp, "%s", bigBuffer);
-    printf("%s\n", bigBuffer);
+    fwrite(big_buffer, sizeof(char), sum, fp);
     fclose(fp);
     free(filename);
+    bzero(buffer, BUF_SIZE);
+    bzero(big_buffer, sizeof(big_buffer));
 
     return 0;
 }
@@ -199,6 +216,7 @@ int cdup_cmd(void *thr_data){
     long i;
     char delim = '/';
 
+    //Znajdujemy pierwsze wystąpienie / w working directory
     for(i=d-1;i>=0;i--){
         if(dir[i]==delim && i != d-1){
             break;
@@ -207,8 +225,9 @@ int cdup_cmd(void *thr_data){
     long toCutLen = d-i;
     long substrLen = d-toCutLen;
 
+    //Jeżeli jesteśmy w /USER, to nie wykonujemy komendy
     if(substrLen==0){
-        return 0;
+        return -1;
     }else {
         char *substr;
         substr = (char*) malloc((substrLen + 1)*sizeof(char));
@@ -225,6 +244,8 @@ int cdup_cmd(void *thr_data){
 int mkd_cmd(void *thr_data, char* args){
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
     char *w;
+
+
     w= malloc(strlen((*th_data).wDir)*sizeof(char) + strlen(args) * sizeof(char) + 1);
     strcpy(w, ".");
     strcat(w, (*th_data).wDir);
@@ -266,8 +287,12 @@ int transformPortNumber(char p1[], char p2[]){
 int cwd_cmd(void *thr_data, char*args) {
     struct thread_data_t *th_data = (struct thread_data_t *) thr_data;
     if (args != NULL) {
+        if(strcmp(args, "/")==0){
+            return -1;
+        }
+
         if (strcmp(args, "..") == 0) {
-            cdup_cmd(th_data);
+            return cdup_cmd(th_data);
         } else {
             if (strchr(args, '/') != NULL) {
                 strcpy((*th_data).wDir, args);
