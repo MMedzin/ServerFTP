@@ -7,13 +7,13 @@ struct thread_data_t
 {
     int fd;
     pthread_mutex_t mutex;
-    int doExit;
-    int fileTransferConn;
-    char* fileTransferAddress;
-    int fileTransferPort;
-    int transferMode;
+    int do_exit;
+    int fd_file_transfer;
+    char* file_transfer_address;
+    int file_transfer_port;
+    int transfer_mode;
     char* username;
-    char wDir[1035];
+    char working_directory[1035];
     char* filename;
 };
 #endif //SK_PROJEKT_THREAD_DATA_T_H

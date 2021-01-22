@@ -11,9 +11,9 @@
 
 int user_cmd(void *thr_data, char* args);
 int stor_cmd(void *thr_data, char *args, int data_type);
-int rmd_cmd(void *thr_data, char* args);
+int rmd_cmd(void *thr_data, char *args);
 int dele_cmd(void *thr_data, char* args);
-int retr_cmd(void *thr_data, char* args);
+int retr_cmd(void *thr_data, char *args, int data_type);
 int list_cmd(void *thr_data);
 int cdup_cmd(void *thr_data);
 int cwd_cmd(void *thr_data, char* args);

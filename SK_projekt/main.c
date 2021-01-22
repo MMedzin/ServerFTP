@@ -82,7 +82,8 @@ char *getResponse(char *cmd, void *t_data) {
     char cmdCopy[BUF_SIZE];
     strcpy(cmdCopy, cmd);
     char delim[] = " \r";
-    char *saveptr;
+    char file_delim[] = "\r";
+    char *saveptr = cmdCopy;
     char *cmd_cut= strtok_r(cmdCopy, delim, &saveptr); // 'wycięcie' nazwy komendy
     // zmienne użyteczne przy przetważaniu komend
     char *response = malloc(100);
@@ -117,16 +118,16 @@ char *getResponse(char *cmd, void *t_data) {
             return "215 UNIX system type.\n";
 
         case (PWD_CMD):
-            sprintf(response, "257 \"%s\" created\r\n", (*th_data).wDir);
+            sprintf(response, "257 \"%s\" created\r\n", (*th_data).working_directory);
             return response;
 
         case (TYPE_CMD):
             cmd_cut = strtok_r(NULL, delim, &saveptr);
             if (strcmp(cmd_cut, "A") == 0) {
-                (*th_data).transferMode = ASCII_TYPE;
+                (*th_data).transfer_mode = ASCII_TYPE;
                 return "200 Command okay.\r\n";
             } else if (strcmp(cmd_cut, "I") == 0) {
-                (*th_data).transferMode = IMAGE_TYPE;
+                (*th_data).transfer_mode = IMAGE_TYPE;
                 return "200 Command okay.\r\n";
             }
             return "504 Command not implemented for that parameter.\r\n";
@@ -164,10 +165,10 @@ char *getResponse(char *cmd, void *t_data) {
                     }
                     p2[3] = '\0';
                     portNum = transformPortNumber(p1, p2);
-                    free((*th_data).fileTransferAddress);
-                    (*th_data).fileTransferAddress = malloc(sizeof(host));
-                    strcpy((*th_data).fileTransferAddress, host);
-                    (*th_data).fileTransferPort = portNum;
+                    free((*th_data).file_transfer_address);
+                    (*th_data).file_transfer_address = malloc(sizeof(host));
+                    strcpy((*th_data).file_transfer_address, host);
+                    (*th_data).file_transfer_port = portNum;
                     return "200 Command okay.\r\n";
                 }
                 return "504 Command not implemented for that parameter.\r\n";
@@ -184,9 +185,9 @@ char *getResponse(char *cmd, void *t_data) {
             return "504 Command not implemented for that parameter.\r\n";
 
         case (LIST_CMD):
-            (*th_data).fileTransferConn = createFileTransferConn((*th_data).fileTransferAddress,
-                                                                 (*th_data).fileTransferPort);
-            if ((*th_data).fileTransferConn == -1) {
+            (*th_data).fd_file_transfer = createFileTransferConn((*th_data).file_transfer_address,
+                                                                 (*th_data).file_transfer_port);
+            if ((*th_data).fd_file_transfer == -1) {
                 return "425 Can't open data connection.\r\n";
             }
 
@@ -199,7 +200,7 @@ char *getResponse(char *cmd, void *t_data) {
             }
 
         case (QUIT_CMD):
-            (*th_data).doExit = 1;
+            (*th_data).do_exit = 1;
             return "221 Service closing control connection.\r\n";
         case (RMD_CMD):
             cmd_cut = strtok_r(NULL, delim, &saveptr);
@@ -210,7 +211,12 @@ char *getResponse(char *cmd, void *t_data) {
 
             return "500 Syntax error.\r\n";
         case (CWD_CMD):
-            cmd_cut = strtok_r(NULL, delim, &saveptr);
+            cmd_cut = strtok_r(NULL, file_delim, &saveptr);
+
+            if(cmd_cut == NULL){
+                return "501 Syntax error in parameters or arguments.\r\n";
+            }
+
             result = cwd_cmd(t_data, cmd_cut);
 
             if(result==0){
@@ -226,7 +232,11 @@ char *getResponse(char *cmd, void *t_data) {
 
             return "500 Syntax error.\r\n";
         case (MKD_CMD):
-            cmd_cut = strtok_r(NULL, delim, &saveptr);
+            cmd_cut = strtok_r(NULL, file_delim, &saveptr);
+            if(cmd_cut == NULL){
+                return "501 Syntax error in parameters or arguments.\r\n";
+            }
+
             result = mkd_cmd(th_data, cmd_cut);
 
             if (result == 0) {
@@ -238,26 +248,33 @@ char *getResponse(char *cmd, void *t_data) {
 
         case (STOR_CMD):
             //Utworzenie połączenia, przez które zostanie odebrany plik
-            (*th_data).fileTransferConn = createFileTransferConn((*th_data).fileTransferAddress,
-                                                                 (*th_data).fileTransferPort);
-            if ((*th_data).fileTransferConn == -1) {
+            (*th_data).fd_file_transfer = createFileTransferConn((*th_data).file_transfer_address,
+                                                                 (*th_data).file_transfer_port);
+            if ((*th_data).fd_file_transfer == -1) {
                 return "425 Can't open data connection.\r\n";
             }else{
                 write((th_data)->fd, "150 Opening ASCII mode data connection for file list.\r\n",
                       strlen("150 Opening ASCII mode data connection for file list.\r\n"));
             }
 
-            cmd_cut = strtok_r(NULL, delim, &saveptr);
-            result = stor_cmd(th_data, cmd_cut, th_data->transferMode);
+            cmd_cut = strtok_r(NULL, file_delim, &saveptr);
+
+            if(cmd_cut == NULL){
+                return "501 Syntax error in parameters or arguments.\r\n";
+            }
+            result = stor_cmd(th_data, cmd_cut, th_data->transfer_mode);
             if (result == 0) {
                 return "250 Requested file action successful.\r\n";
             }
             return "552 Requested file action aborted.\r\n";
 
         case DELE_CMD:
-            cmd_cut = strtok_r(NULL, delim, &saveptr);
+            cmd_cut = strtok_r(NULL, file_delim, &saveptr);
             result = dele_cmd(th_data, cmd_cut);
 
+            if(cmd_cut == NULL){
+                return "501 Syntax error in parameters or arguments.\r\n";
+            }
             if (result != 0) {
                 return "550 Requested action not taken.\r\n";
             }
@@ -265,17 +282,21 @@ char *getResponse(char *cmd, void *t_data) {
             return "250 Requested file action okay, completed.\r\n";
         case RETR_CMD:
             //Utworzenie połączenia, przez które zostanie odebrany plik
-            (*th_data).fileTransferConn = createFileTransferConn((*th_data).fileTransferAddress,
-                                                                 (*th_data).fileTransferPort);
-            if ((*th_data).fileTransferConn == -1) {
+            (*th_data).fd_file_transfer = createFileTransferConn((*th_data).file_transfer_address,
+                                                                 (*th_data).file_transfer_port);
+            if ((*th_data).fd_file_transfer == -1) {
                 return "425 Can't open data connection.\r\n";
             }else{
                 write((th_data)->fd, "150 Opening ASCII mode data connection for file list.\r\n",
                       strlen("150 Opening ASCII mode data connection for file list.\r\n"));
             }
-            cmd_cut=strtok_r(NULL, delim, &saveptr);
+            cmd_cut=strtok_r(NULL, file_delim, &saveptr);
 
-            result = retr_cmd(t_data, cmd_cut);
+            if(cmd_cut == NULL){
+                return "501 Syntax error in parameters or arguments.\r\n";
+            }
+
+            result = retr_cmd(t_data, cmd_cut, (*th_data).transfer_mode);
             if (result == 0) {
                 return "250 Requested file action successful.\r\n";
             }
@@ -296,7 +317,7 @@ void *ThreadBehavior(void *t_data) {
     char buff_read[BUF_SIZE];
     while (1) {
         int r = (int) read((*th_data).fd, buff_read, BUF_SIZE);
-        if (r == 0 || (*th_data).doExit == 1) break;
+        if (r == 0 || (*th_data).do_exit == 1) break;
         buff_read[r] = '\0';
         printf("%s", buff_read);
         buff_write = getResponse(buff_read, th_data);
@@ -305,9 +326,9 @@ void *ThreadBehavior(void *t_data) {
         pthread_mutex_unlock(&(*th_data).mutex);
     }
     printf("Quitting...\n");
-    (*th_data).doExit = 1;
+    (*th_data).do_exit = 1;
 
-    close((*th_data).fileTransferConn);
+    close((*th_data).fd_file_transfer);
 
     free(th_data);
     num_of_conns--;
@@ -325,9 +346,9 @@ void handleConnection(int connection_socket_descriptor, pthread_mutex_t t_mutex)
     //dynamiczne utworzenie instancji struktury thread_data_t o nazwie t_data (+ w odpowiednim miejscu zwolnienie pamięci)
     struct thread_data_t *t_data = malloc(sizeof(struct thread_data_t));
     //wypełnienie pól struktury
-    t_data->doExit = 0;
+    t_data->do_exit = 0;
     t_data->fd = connection_socket_descriptor;
-    t_data->fileTransferConn = 0;
+    t_data->fd_file_transfer = 0;
     t_data->mutex = t_mutex;
 
     create_result = pthread_create(&thread1, NULL, ThreadBehavior, (void *) t_data);
