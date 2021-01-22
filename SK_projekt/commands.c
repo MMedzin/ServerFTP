@@ -17,9 +17,9 @@
 //
 
 
-int user_cmd(void *thr_data, char* ptr){
+int user_cmd(void *thr_data, char* args){
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
-    char *dir_name = ptr;
+    char *dir_name = args;
     mkdir(dir_name, 0777);
     (*th_data).username = USER;
     strcpy((*th_data).wDir, "/");
@@ -28,32 +28,36 @@ int user_cmd(void *thr_data, char* ptr){
     return 0;
 }
 
-int stor_cmd(void *thr_data, char* ptr){
+int stor_cmd(void *thr_data, char* args){
 
 //            char** nameParts = malloc(50*sizeof(char*));
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
     char * filename;
-    filename = calloc(strlen((*th_data).wDir) + strlen(ptr) + 2, sizeof(char));
+    filename = calloc(strlen((*th_data).wDir) + strlen(args) + 2, sizeof(char));
     strcpy(filename, ".");
     strcat(filename, (*th_data).wDir);
     strcat(filename, "/");
-    strcat(filename, ptr);
+    strcat(filename, args);
     printf("Nazwa pliku: %s\n", filename);
-    write((th_data)->fd, "150 Opening ASCII mode data connection for file list.\r\n",
-          strlen("150 Opening ASCII mode data connection for file list.\r\n"));
+
 
     FILE *fp;
     char buffer[BUF_SIZE];
     char bigBuffer[1000*BUF_SIZE];
 
     fp = fopen(filename, "w");
+    if(ferror(fp)!=0){
+        printf("Nie można otworzyć pliku: %s\r\n", filename);
+        free(filename);
+        return -1;
+    }
     // TODO dodaj tu coś jak się plik źle otworzy
-    int n = read((*th_data).fileTransferConn, buffer, BUF_SIZE);
+    int n = (int) read((*th_data).fileTransferConn, buffer, BUF_SIZE);
     buffer[n] = '\0';
     strcpy(bigBuffer, buffer);
     while(n>0){
         bzero(buffer, BUF_SIZE);
-        n = read((*th_data).fileTransferConn, buffer, BUF_SIZE);
+        n = (int) read((*th_data).fileTransferConn, buffer, BUF_SIZE);
         buffer[n]='\0';
         strcat(bigBuffer, buffer);
     }
@@ -62,22 +66,67 @@ int stor_cmd(void *thr_data, char* ptr){
 
     fprintf(fp, "%s", bigBuffer);
     printf("%s\n", bigBuffer);
-    bzero(buffer, BUF_SIZE);
-    bzero(bigBuffer, 1000*BUF_SIZE);
     fclose(fp);
+    free(filename);
 
-//    close((*th_data).fd);
     return 0;
 }
 
-int rmd_cmd(void*thr_data, char *ptr) {
+int retr_cmd(void *thr_data, char* args){
+
+    struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
+    char * filename;
+    filename = calloc(strlen((*th_data).wDir) + strlen(args) + 2, sizeof(char));
+    strcpy(filename, ".");
+    strcat(filename, (*th_data).wDir);
+    strcat(filename, "/");
+    strcat(filename, args);
+    printf("Nazwa pliku: %s\n", filename);
+
+    FILE *fp;
+    char buffer[BUF_SIZE];
+    char bigBuffer[1000*BUF_SIZE];
+
+    fp = fopen(filename, "r");
+
+    if(ferror(fp)!=0){
+        printf("Cannot open file: %s\r\n", filename);
+        free(filename);
+        return -1;
+    }
+    // TODO dodaj tu coś jak się plik źle otworzy
+    //TODO zobaczyć co z tymi buforami kurna
+
+    int n = (int) fread(bigBuffer, sizeof(char), 1000 * BUF_SIZE, fp);
+
+    if(n==-1){
+        printf("Error while reading file: %s\r\n", filename);
+        free(filename);
+        return -1;
+    }
+
+    int result = write((*th_data).fileTransferConn, bigBuffer, n);
+
+    //todo może lepiej??
+    if(result <=0){
+        return -1;
+    }
+
+    fclose(fp);
+    free(filename);
+
+    return 0;
+}
+
+
+int rmd_cmd(void*thr_data, char *args) {
     struct thread_data_t *th_data = (struct thread_data_t *) thr_data;
-    if (ptr != NULL) {
-        char *pathToDir = calloc(strlen((*th_data).wDir) + strlen(ptr) + 2, sizeof(char));
+    if (args != NULL) {
+        char *pathToDir = calloc(strlen((*th_data).wDir) + strlen(args) + 2, sizeof(char));
         strcat(pathToDir, ".");
         strcat(pathToDir, (*th_data).wDir);
         strcat(pathToDir, "/");
-        strcat(pathToDir, ptr);
+        strcat(pathToDir, args);
         printf("Removing %s...\n", pathToDir);
         rmdir(pathToDir);
         //TODO kontrola usuwania
@@ -100,7 +149,7 @@ int list_cmd(void *thr_data){
     t_data->username = (*th_data).username;
     strcpy(t_data->wDir, (*th_data).wDir);
     t_data->fileTransferConn = (*th_data).fileTransferConn;
-    int create_result = 0;
+    int create_result;
     create_result = pthread_create(&thread, NULL, sendList, (void *)t_data);
     if (create_result){
         printf("Błąd przy próbie utworzenia wątku przesyłania listy, kod błędu: %d\n", create_result);
@@ -124,7 +173,7 @@ void *sendList(void *t_data) {
         printf("failed to read directory\n");
     }
     else{
-        unsigned long i = 0;
+        unsigned long i;
         while (fgets(path, sizeof(path), fp) != NULL){
 //            strcat(path, "\r\n");
             i = strlen(path);
@@ -164,7 +213,7 @@ int cdup_cmd(void *thr_data){
         char *substr;
         substr = (char*) malloc((substrLen + 1)*sizeof(char));
         substr[substrLen] = '\0';
-        memcpy(substr, dir, substrLen);
+        memcpy(substr, dir, (size_t) substrLen);
         strcpy((*th_data).wDir, substr);
         free(substr);
     }
@@ -173,27 +222,27 @@ int cdup_cmd(void *thr_data){
 }
 
 
-int mkd_cmd(void *thr_data, char* ptr){
+int mkd_cmd(void *thr_data, char* args){
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
     char *w;
-    w= malloc(strlen((*th_data).wDir)*sizeof(char) + strlen(ptr) * sizeof(char)+1);
+    w= malloc(strlen((*th_data).wDir)*sizeof(char) + strlen(args) * sizeof(char) + 1);
     strcpy(w, ".");
     strcat(w, (*th_data).wDir);
     strcat(w, "/");
-    strcat(w, ptr);
+    strcat(w, args);
     int err = mkdir(w, 0777);
     free(w);
 
     return err;
 }
-int dele_cmd(void *thr_data, char* ptr) {
+int dele_cmd(void *thr_data, char* args) {
     struct thread_data_t *th_data = (struct thread_data_t *) thr_data;
     char *filename;
-    filename = calloc(strlen((*th_data).wDir) + strlen(ptr) + 2, sizeof(char));
+    filename = calloc(strlen((*th_data).wDir) + strlen(args) + 2, sizeof(char));
     strcpy(filename, ".");
     strcat(filename, (*th_data).wDir);
     strcat(filename, "/");
-    strcat(filename, ptr);
+    strcat(filename, args);
     int err = remove(filename);
     free(filename);
     return err;
@@ -212,4 +261,23 @@ int transformPortNumber(char p1[], char p2[]){
     sprintf(hex, "%s%s", hex1, hex2);
     int port = (int)strtol(hex, NULL, 16);
     return port;
+}
+
+int cwd_cmd(void *thr_data, char*args) {
+    struct thread_data_t *th_data = (struct thread_data_t *) thr_data;
+    if (args != NULL) {
+        if (strcmp(args, "..") == 0) {
+            cdup_cmd(th_data);
+        } else {
+            if (strchr(args, '/') != NULL) {
+                strcpy((*th_data).wDir, args);
+            } else {
+                strcat((*th_data).wDir, "/");
+                strcat((*th_data).wDir, args);
+            }
+        }
+    }else{
+        return -1;
+    }
+    return 0;
 }

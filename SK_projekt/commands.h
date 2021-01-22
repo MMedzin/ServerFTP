@@ -9,13 +9,15 @@
 #define USER "test1"
 #define PASS "testhaslo"
 
-int user_cmd(void *thr_data, char* ptr);
-int stor_cmd(void *thr_data, char* ptr);
-int rmd_cmd(void *thr_data, char* ptr);
-int dele_cmd(void *thr_data, char* ptr);
+int user_cmd(void *thr_data, char* args);
+int stor_cmd(void *thr_data, char* args);
+int rmd_cmd(void *thr_data, char* args);
+int dele_cmd(void *thr_data, char* args);
+int retr_cmd(void *thr_data, char* args);
 int list_cmd(void *thr_data);
 int cdup_cmd(void *thr_data);
-int mkd_cmd(void *thr_data, char* ptr);
+int cwd_cmd(void *thr_data, char* args);
+int mkd_cmd(void *thr_data, char* args);
 void * sendList(void *t_data);
 int transformPortNumber(char p1[], char p2[]);
 

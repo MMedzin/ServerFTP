@@ -6,13 +6,13 @@
 
 #IncludeRegexTransform: 
 
-/home/michal/CLionProjects/SK_projekt/command_parser.h
+/home/marysia/CLionProjects/SK_projekt/command_parser.h
 
-/home/michal/CLionProjects/SK_projekt/commands.h
+/home/marysia/CLionProjects/SK_projekt/commands.h
 thread_data_t.h
-/home/michal/CLionProjects/SK_projekt/thread_data_t.h
+/home/marysia/CLionProjects/SK_projekt/thread_data_t.h
 
-/home/michal/CLionProjects/SK_projekt/main.c
+/home/marysia/CLionProjects/SK_projekt/main.c
 sys/types.h
 -
 sys/socket.h
@@ -34,15 +34,15 @@ pthread.h
 errno.h
 -
 thread_data_t.h
-/home/michal/CLionProjects/SK_projekt/thread_data_t.h
+/home/marysia/CLionProjects/SK_projekt/thread_data_t.h
 command_parser.h
-/home/michal/CLionProjects/SK_projekt/command_parser.h
+/home/marysia/CLionProjects/SK_projekt/command_parser.h
 thread_data_t.h
-/home/michal/CLionProjects/SK_projekt/thread_data_t.h
+/home/marysia/CLionProjects/SK_projekt/thread_data_t.h
 commands.h
-/home/michal/CLionProjects/SK_projekt/commands.h
+/home/marysia/CLionProjects/SK_projekt/commands.h
 
-/home/michal/CLionProjects/SK_projekt/thread_data_t.h
+/home/marysia/CLionProjects/SK_projekt/thread_data_t.h
 pthread.h
 -
 

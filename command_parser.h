@@ -21,6 +21,7 @@
 #define STOR_CMD 14
 #define DELE_CMD 15
 #define RETR_CMD 16
+#define SIZE_CMD 17
 #define UNKNOWN_CMD (-1)
 
 int commandCode(char* cmd);

@@ -72,6 +72,9 @@ int commandCode(char* cmd)
     else if(strcmp(cmd, "RETR")==0){
         printf("RETR cmd recognized\n");
         return RETR_CMD;
+    }else if(strcmp(cmd, "SIZE")==0){
+        printf("SIZE cmd recognized\n");
+        return RETR_CMD;
     }
     else{
         printf("Unknown cmd\n");
