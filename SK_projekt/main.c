@@ -359,13 +359,25 @@ void handleConnection(int connection_socket_descriptor, pthread_mutex_t t_mutex)
 }
 
 int main(int argc, char *argv[]) {
-    //TODO zmiana numeru portu ze statycznych na dynamiczne podawane przez argumenty i to samo z adresem ip
+    if(argc!=3){
+        printf("Invalid arguments. Correct use: ./server <IPv4 ADDR> <PORT NUMBER>\n\r");
+        exit(-1);
+    }
+    int port_num = atoi(argv[2]);
+
+    if(port_num<=0){
+        printf("Invalid port number!\n\r");
+        exit(-1);
+    }
+
+
     int server_socket_descriptor;
     int connection_socket_descriptor;
     int bind_result;
     int listen_result;
     char reuse_addr_val = 1;
     struct sockaddr_in server_address;
+    printf("Arguemnty %s", argv[1]);
 
     //inicjalizacja gniazda serwera
 
@@ -374,7 +386,10 @@ int main(int argc, char *argv[]) {
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
     server_address.sin_port = htons(SERVER_PORT);
 
-    inet_pton(AF_INET, "127.0.0.1", &(server_address.sin_addr));
+    if(inet_pton(AF_INET, argv[1], &(server_address.sin_addr))<=0){
+        printf("Invalid IP address!\n\r");
+        exit(-1);
+    }
 
     server_socket_descriptor = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket_descriptor < 0) {
