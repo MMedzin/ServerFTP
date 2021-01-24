@@ -8,9 +8,53 @@
 
 /home/marysia/CLionProjects/SK_projekt/command_parser.h
 
+/home/marysia/CLionProjects/SK_projekt/commands.c
+commands.h
 /home/marysia/CLionProjects/SK_projekt/commands.h
 thread_data_t.h
 /home/marysia/CLionProjects/SK_projekt/thread_data_t.h
+sys/types.h
+-
+sys/wait.h
+-
+sys/socket.h
+-
+netinet/in.h
+-
+arpa/inet.h
+-
+unistd.h
+-
+netdb.h
+-
+signal.h
+-
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+ftw.h
+-
+
+/home/marysia/CLionProjects/SK_projekt/commands.h
+thread_data_t.h
+/home/marysia/CLionProjects/SK_projekt/thread_data_t.h
+
+/home/marysia/CLionProjects/SK_projekt/hashmap_threads.c
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+pthread.h
+-
+hashmap_threads.h
+/home/marysia/CLionProjects/SK_projekt/hashmap_threads.h
+
+/home/marysia/CLionProjects/SK_projekt/hashmap_threads.h
 
 /home/marysia/CLionProjects/SK_projekt/main.c
 sys/types.h
@@ -35,6 +79,8 @@ errno.h
 -
 thread_data_t.h
 /home/marysia/CLionProjects/SK_projekt/thread_data_t.h
+hashmap_threads.h
+/home/marysia/CLionProjects/SK_projekt/hashmap_threads.h
 command_parser.h
 /home/marysia/CLionProjects/SK_projekt/command_parser.h
 thread_data_t.h
@@ -45,4 +91,6 @@ commands.h
 /home/marysia/CLionProjects/SK_projekt/thread_data_t.h
 pthread.h
 -
+hashmap_threads.h
+/home/marysia/CLionProjects/SK_projekt/hashmap_threads.h
 

@@ -88,6 +88,12 @@
 		<Unit filename="/home/marysia/CLionProjects/SK_projekt/commands.h">
 			<Option target="SK_projekt"/>
 		</Unit>
+		<Unit filename="/home/marysia/CLionProjects/SK_projekt/hashmap_threads.c">
+			<Option target="SK_projekt"/>
+		</Unit>
+		<Unit filename="/home/marysia/CLionProjects/SK_projekt/hashmap_threads.h">
+			<Option target="SK_projekt"/>
+		</Unit>
 		<Unit filename="/home/marysia/CLionProjects/SK_projekt/main.c">
 			<Option target="SK_projekt"/>
 		</Unit>

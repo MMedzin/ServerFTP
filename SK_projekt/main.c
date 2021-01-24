@@ -8,15 +8,17 @@
 #include <string.h>
 #include <pthread.h>
 #include <errno.h>
-#include "thread_data_t.h"
 
+#include "thread_data_t.h"
+#include "hashmap_threads.h"
 #include "command_parser.h"
 #include "thread_data_t.h"
 #include "commands.h"
 
-#define SERVER_PORT 1235
+#define SERVER_PORT 1234
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
+#define HASH_MAP_SIZE 1000
 #define CON_LIMIT 3
 
 
@@ -79,12 +81,13 @@ void *tempClose(void *th_data) {
 char *getResponse(char *cmd, void *t_data) {
     struct thread_data_t *th_data = (struct thread_data_t *) t_data;
 
+    pthread_mutex_t file_mutex;
     char cmdCopy[BUF_SIZE];
     strcpy(cmdCopy, cmd);
     char delim[] = " \r";
     char file_delim[] = "\r";
     char *saveptr = cmdCopy;
-    char *cmd_cut= strtok_r(cmdCopy, delim, &saveptr); // 'wycięcie' nazwy komendy
+    char *cmd_cut = strtok_r(cmdCopy, delim, &saveptr); // 'wycięcie' nazwy komendy
     // zmienne użyteczne przy przetważaniu komend
     char *response = malloc(100);
     char host[16];
@@ -213,27 +216,27 @@ char *getResponse(char *cmd, void *t_data) {
         case (CWD_CMD):
             cmd_cut = strtok_r(NULL, file_delim, &saveptr);
 
-            if(cmd_cut == NULL){
+            if (cmd_cut == NULL) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
 
             result = cwd_cmd(t_data, cmd_cut);
 
-            if(result==0){
+            if (result == 0) {
                 return "200 working directory changed.\r\n";
             }
 
             return "500 Syntax error.\r\n";
         case (CDUP_CMD):
             result = cdup_cmd(th_data);
-            if(result==0){
+            if (result == 0) {
                 return "200 working directory changed.\r\n";
             }
 
             return "500 Syntax error.\r\n";
         case (MKD_CMD):
             cmd_cut = strtok_r(NULL, file_delim, &saveptr);
-            if(cmd_cut == NULL){
+            if (cmd_cut == NULL) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
 
@@ -252,14 +255,14 @@ char *getResponse(char *cmd, void *t_data) {
                                                                  (*th_data).file_transfer_port);
             if ((*th_data).fd_file_transfer == -1) {
                 return "425 Can't open data connection.\r\n";
-            }else{
+            } else {
                 write((th_data)->fd, "150 Opening ASCII mode data connection for file list.\r\n",
                       strlen("150 Opening ASCII mode data connection for file list.\r\n"));
             }
 
             cmd_cut = strtok_r(NULL, file_delim, &saveptr);
 
-            if(cmd_cut == NULL){
+            if (cmd_cut == NULL) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
             result = stor_cmd(th_data, cmd_cut, th_data->transfer_mode);
@@ -270,9 +273,14 @@ char *getResponse(char *cmd, void *t_data) {
 
         case DELE_CMD:
             cmd_cut = strtok_r(NULL, file_delim, &saveptr);
+
+            file_mutex = lookup((th_data)->mutex_table, cmd_cut);
+            pthread_mutex_lock(&file_mutex);
+
             result = dele_cmd(th_data, cmd_cut);
 
-            if(cmd_cut == NULL){
+            pthread_mutex_unlock(&file_mutex);
+            if (cmd_cut == NULL) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
             if (result != 0) {
@@ -286,17 +294,21 @@ char *getResponse(char *cmd, void *t_data) {
                                                                  (*th_data).file_transfer_port);
             if ((*th_data).fd_file_transfer == -1) {
                 return "425 Can't open data connection.\r\n";
-            }else{
+            } else {
                 write((th_data)->fd, "150 Opening ASCII mode data connection for file list.\r\n",
                       strlen("150 Opening ASCII mode data connection for file list.\r\n"));
             }
-            cmd_cut=strtok_r(NULL, file_delim, &saveptr);
+            cmd_cut = strtok_r(NULL, file_delim, &saveptr);
 
-            if(cmd_cut == NULL){
+            if (cmd_cut == NULL) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
+            file_mutex = lookup((th_data)->mutex_table, cmd_cut);
+            pthread_mutex_lock(&file_mutex);
 
             result = retr_cmd(t_data, cmd_cut, (*th_data).transfer_mode);
+
+            pthread_mutex_unlock(&file_mutex);
             if (result == 0) {
                 return "250 Requested file action successful.\r\n";
             }
@@ -323,7 +335,6 @@ void *ThreadBehavior(void *t_data) {
         buff_write = getResponse(buff_read, th_data);
         printf("%s", buff_write);
         write((*th_data).fd, buff_write, strlen(buff_write));
-        pthread_mutex_unlock(&(*th_data).mutex);
     }
     printf("Quitting...\n");
     (*th_data).do_exit = 1;
@@ -336,7 +347,7 @@ void *ThreadBehavior(void *t_data) {
 }
 
 //funkcja obsługująca połączenie z nowym klientem
-void handleConnection(int connection_socket_descriptor, pthread_mutex_t t_mutex) {
+void handleConnection(int connection_socket_descriptor, struct table *mutex_table) {
     int create_result = 0;
 
     //uchwyt na wątek
@@ -349,7 +360,7 @@ void handleConnection(int connection_socket_descriptor, pthread_mutex_t t_mutex)
     t_data->do_exit = 0;
     t_data->fd = connection_socket_descriptor;
     t_data->fd_file_transfer = 0;
-    t_data->mutex = t_mutex;
+    t_data->mutex_table = mutex_table;
 
     create_result = pthread_create(&thread1, NULL, ThreadBehavior, (void *) t_data);
     if (create_result) {
@@ -359,16 +370,18 @@ void handleConnection(int connection_socket_descriptor, pthread_mutex_t t_mutex)
 }
 
 int main(int argc, char *argv[]) {
-    if(argc!=3){
+    if (argc != 3) {
         printf("Invalid arguments. Correct use: ./server <IPv4 ADDR> <PORT NUMBER>\n\r");
         exit(-1);
     }
     int port_num = atoi(argv[2]);
 
-    if(port_num<=0){
+    if (port_num <= 0) {
         printf("Invalid port number!\n\r");
         exit(-1);
     }
+
+    struct table *mutex_table = createTable(HASH_MAP_SIZE);
 
 
     int server_socket_descriptor;
@@ -386,7 +399,7 @@ int main(int argc, char *argv[]) {
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
     server_address.sin_port = htons(SERVER_PORT);
 
-    if(inet_pton(AF_INET, argv[1], &(server_address.sin_addr))<=0){
+    if (inet_pton(AF_INET, argv[1], &(server_address.sin_addr)) <= 0) {
         printf("Invalid IP address!\n\r");
         exit(-1);
     }
@@ -410,7 +423,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    pthread_mutex_t t_mutex = PTHREAD_MUTEX_INITIALIZER;
 
     pthread_t tempThread;
     pthread_create(&tempThread, NULL, tempClose, NULL);
@@ -424,10 +436,9 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
         num_of_conns++;
-        handleConnection(connection_socket_descriptor, t_mutex);
+        handleConnection(connection_socket_descriptor, mutex_table);
     }
 
-    pthread_mutex_destroy(&t_mutex);
 
     close(server_socket_descriptor);
     return (0);

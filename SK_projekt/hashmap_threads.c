@@ -57,6 +57,8 @@ void insert(struct table *t, char* val_str){
     newNode->next = list;
     t->list[pos] = newNode;
 }
+
+
 pthread_mutex_t lookup(struct table *t,char * val_str){
     int key = convertStrToInt(val_str);
     int pos = hashCode(t,key);
@@ -68,5 +70,7 @@ pthread_mutex_t lookup(struct table *t,char * val_str){
         }
         temp = temp->next;
     }
-    exit(-1);
+
+    insert(t, val_str);
+    return lookup(t, val_str);
 }

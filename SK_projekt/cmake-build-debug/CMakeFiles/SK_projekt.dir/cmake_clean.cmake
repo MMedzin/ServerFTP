@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/SK_projekt.dir/command_parser.c.o"
   "CMakeFiles/SK_projekt.dir/commands.c.o"
+  "CMakeFiles/SK_projekt.dir/hashmap_threads.c.o"
   "CMakeFiles/SK_projekt.dir/main.c.o"
   "CMakeFiles/SK_projekt.dir/utils.c.o"
   "SK_projekt"

@@ -197,6 +197,33 @@ commands.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SK_projekt.dir/build.make CMakeFiles/SK_projekt.dir/commands.c.s
 .PHONY : commands.c.s
 
+hashmap_threads.o: hashmap_threads.c.o
+
+.PHONY : hashmap_threads.o
+
+# target to build an object file
+hashmap_threads.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SK_projekt.dir/build.make CMakeFiles/SK_projekt.dir/hashmap_threads.c.o
+.PHONY : hashmap_threads.c.o
+
+hashmap_threads.i: hashmap_threads.c.i
+
+.PHONY : hashmap_threads.i
+
+# target to preprocess a source file
+hashmap_threads.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SK_projekt.dir/build.make CMakeFiles/SK_projekt.dir/hashmap_threads.c.i
+.PHONY : hashmap_threads.c.i
+
+hashmap_threads.s: hashmap_threads.c.s
+
+.PHONY : hashmap_threads.s
+
+# target to generate assembly for a file
+hashmap_threads.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SK_projekt.dir/build.make CMakeFiles/SK_projekt.dir/hashmap_threads.c.s
+.PHONY : hashmap_threads.c.s
+
 main.o: main.c.o
 
 .PHONY : main.o
@@ -266,6 +293,9 @@ help:
 	@echo "... commands.o"
 	@echo "... commands.i"
 	@echo "... commands.s"
+	@echo "... hashmap_threads.o"
+	@echo "... hashmap_threads.i"
+	@echo "... hashmap_threads.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

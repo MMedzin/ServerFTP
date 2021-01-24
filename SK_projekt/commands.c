@@ -57,7 +57,7 @@ int stor_cmd(void *thr_data, char *args, int data_type) {
 
 
     if(ferror(fp)!=0){
-        printf("Nie można otworzyć pliku: %s\r\n", filename);
+        printf("Cannot open file: %s\r\n", filename);
         free(filename);
         return -1;
     }
@@ -77,8 +77,7 @@ int stor_cmd(void *thr_data, char *args, int data_type) {
         }else {
             strcat(big_buffer, buffer);
         }
-        printf("%d: Buffer: %s BigBuffer: %s", sum, buffer, big_buffer);
-        sum+=rec_bytes;
+        sum+=rec_bytes +1;
     }
     // TODO jak coś się źle odczyta
     strcat(big_buffer, "\0");
