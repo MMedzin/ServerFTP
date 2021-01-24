@@ -15,7 +15,6 @@
 #include "thread_data_t.h"
 #include "commands.h"
 
-#define SERVER_PORT 1234
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define HASH_MAP_SIZE 1000
@@ -265,7 +264,7 @@ char *getResponse(char *cmd, void *t_data) {
             if (cmd_cut == NULL) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
-            result = stor_cmd(th_data, cmd_cut, th_data->transfer_mode);
+            result = stor_cmd(th_data, cmd_cut);
             if (result == 0) {
                 return "250 Requested file action successful.\r\n";
             }
@@ -306,7 +305,7 @@ char *getResponse(char *cmd, void *t_data) {
             file_mutex = lookup((th_data)->mutex_table, cmd_cut);
             pthread_mutex_lock(&file_mutex);
 
-            result = retr_cmd(t_data, cmd_cut, (*th_data).transfer_mode);
+            result = retr_cmd(t_data, cmd_cut);
 
             pthread_mutex_unlock(&file_mutex);
             if (result == 0) {
@@ -397,7 +396,7 @@ int main(int argc, char *argv[]) {
     memset(&server_address, 0, sizeof(struct sockaddr));
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_address.sin_port = htons(SERVER_PORT);
+    server_address.sin_port = htons(atoi(argv[2]));
 
     if (inet_pton(AF_INET, argv[1], &(server_address.sin_addr)) <= 0) {
         printf("Invalid IP address!\n\r");

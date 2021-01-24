@@ -28,7 +28,7 @@ int user_cmd(void *thr_data, char* args){
     return 0;
 }
 
-int stor_cmd(void *thr_data, char *args, int data_type) {
+int stor_cmd(void *thr_data, char *args) {
 
 //            char** nameParts = malloc(50*sizeof(char*));
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
@@ -41,17 +41,17 @@ int stor_cmd(void *thr_data, char *args, int data_type) {
     printf("Nazwa pliku: %s\n", filename);
 
 
-    printf("TRYB PRZESYŁANIA W FUNKCJI: %d\n", th_data->transfer_mode);
+    printf("TRYB PRZESYŁANIA W FUNKCJI: %d\n", (*th_data).transfer_mode);
     FILE *fp;
     char buffer[BUF_SIZE];
-    char big_buffer[1000 * BUF_SIZE];
+    char* big_buffer=malloc(BUF_SIZE*sizeof(char));
 
-    if(data_type==1) {
+    if((*th_data).transfer_mode==1) {
         fp = fopen(filename, "w");
-    }else if(data_type ==2){
+    }else if((*th_data).transfer_mode==2){
         fp = fopen(filename, "wb");
     }else{
-        printf("Invalid data type: %d\n", data_type);
+        printf("Invalid data type: %d\n", (*th_data).transfer_mode);
         return -1;
     }
 
@@ -64,20 +64,37 @@ int stor_cmd(void *thr_data, char *args, int data_type) {
     // TODO dodaj tu coś jak się plik źle otworzy
     int rec_bytes;
     int sum = 0;
+    int n = 1;
     while(1){
         bzero(buffer, BUF_SIZE);
-        rec_bytes = (int) read((*th_data).fd_file_transfer, buffer, BUF_SIZE);
+        rec_bytes = (int) read((*th_data).fd_file_transfer, buffer, BUF_SIZE-1);
+        printf("read bytes: %d\n", rec_bytes);
         if(rec_bytes<=0){
             break;
         }
-        buffer[rec_bytes] = '\0';
-
         if(sum==0){
-            strcpy(big_buffer, buffer);
+            if((*th_data).transfer_mode==1){
+                buffer[rec_bytes] = '\0';
+                strcpy(big_buffer, buffer);
+                sum+=rec_bytes +1;
+            }
+            else if((*th_data).transfer_mode==2){
+                memcpy(big_buffer, buffer, rec_bytes);
+                sum+=rec_bytes;
+            }
         }else {
-            strcat(big_buffer, buffer);
+            big_buffer = realloc(big_buffer, n*BUF_SIZE*sizeof(char));
+            if((*th_data).transfer_mode==1){
+                buffer[rec_bytes] = '\0';
+                strcat(big_buffer, buffer);
+                sum+=rec_bytes +1;
+            }
+            else if((*th_data).transfer_mode==2){
+                memcpy(big_buffer+sum, buffer, rec_bytes);
+                sum+=rec_bytes;
+            }
         }
-        sum+=rec_bytes +1;
+        n++;
     }
     // TODO jak coś się źle odczyta
     strcat(big_buffer, "\0");
@@ -91,7 +108,7 @@ int stor_cmd(void *thr_data, char *args, int data_type) {
     return 0;
 }
 
-int retr_cmd(void *thr_data, char* args, int data_type){
+int retr_cmd(void *thr_data, char* args){
 
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
     char * filename;
@@ -105,12 +122,12 @@ int retr_cmd(void *thr_data, char* args, int data_type){
     FILE *fp;
     char *buffer;
 
-    if(data_type==1){
-    fp = fopen(filename, "r");
-    }else if(data_type==2){
+    if((*th_data).transfer_mode==1){
+        fp = fopen(filename, "r");
+    }else if((*th_data).transfer_mode==2){
         fp = fopen(filename, "rb");
     }else{
-        printf("Invalid data type: %d\n", data_type);
+        printf("Invalid data type: %d\n", (*th_data).transfer_mode);
         return -1;
     }
 
