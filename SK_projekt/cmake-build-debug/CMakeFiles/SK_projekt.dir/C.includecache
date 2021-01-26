@@ -6,14 +6,16 @@
 
 #IncludeRegexTransform: 
 
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/commands.c
-commands.h
+/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/command_parser.h
+
 /home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/commands.h
 thread_data_t.h
 /home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/thread_data_t.h
+
+/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/hashmap_threads.h
+
+/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/main.c
 sys/types.h
--
-sys/wait.h
 -
 sys/socket.h
 -
@@ -23,24 +25,26 @@ arpa/inet.h
 -
 unistd.h
 -
-netdb.h
--
-signal.h
--
 stdio.h
 -
 stdlib.h
 -
 string.h
 -
-ftw.h
+pthread.h
 -
-
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/commands.h
+errno.h
+-
 thread_data_t.h
 /home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/thread_data_t.h
-
+hashmap_threads.h
 /home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/hashmap_threads.h
+command_parser.h
+/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/command_parser.h
+thread_data_t.h
+/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/thread_data_t.h
+commands.h
+/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/commands.h
 
 /home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/thread_data_t.h
 pthread.h

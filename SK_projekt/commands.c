@@ -68,7 +68,6 @@ int stor_cmd(void *thr_data, char *args) {
     while(1){
         bzero(buffer, BUF_SIZE);
         rec_bytes = (int) read((*th_data).fd_file_transfer, buffer, BUF_SIZE-1);
-        printf("read bytes: %d\n", rec_bytes);
         if(rec_bytes<=0){
             break;
         }
