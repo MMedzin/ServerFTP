@@ -5,48 +5,59 @@
 
 #include "hashmap_threads.h"
 
-struct node{
+//Hashmapa odpowiedzialna za składowanie mutexów dla każdego z plików
+
+//Węzeł w hashmapie
+struct node {
     int key;
     pthread_mutex_t val;
     struct node *next;
 };
-struct table{
+
+//Tablica węzłów
+struct table {
     int size;
     struct node **list;
 };
-struct table *createTable(int size){
-    struct table *t = (struct table*)malloc(sizeof(struct table));
+
+//Funkcja inicjalizująca tablicę o zadanym rozmiarze
+struct table *createTable(int size) {
+    struct table *t = (struct table *) malloc(sizeof(struct table));
     t->size = size;
-    t->list = (struct node**)malloc(sizeof(struct node*)*size);
+    t->list = (struct node **) malloc(sizeof(struct node *) * size);
     int i;
-    for(i=0;i<size;i++)
+    for (i = 0; i < size; i++)
         t->list[i] = NULL;
     return t;
 }
-int hashCode(struct table *t,int key){
-    if(key<0)
-        return -(key%t->size);
-    return key%t->size;
+
+//Funkcja haszująca
+int hashCode(struct table *t, int key) {
+    if (key < 0)
+        return -(key % t->size);
+    return key % t->size;
 }
 
-int convertStrToInt(char * name){
-    int size= strlen(name);
-    int sum=0;
-    for(int i=0;i<size;i++){
-        sum+= (int) name[i];
+//Zamiana stringa w integera, sumując po kodach ASCII
+int convertStrToInt(char *name) {
+    int size = strlen(name);
+    int sum = 0;
+    for (int i = 0; i < size; i++) {
+        sum += (int) name[i];
     }
 
     return sum;
 }
 
-void insert(struct table *t, char* val_str){
+//Procedura wstawiająca nowy węzeł
+void insert(struct table *t, char *val_str) {
     int key = convertStrToInt(val_str);
-    int pos = hashCode(t,key);
+    int pos = hashCode(t, key);
     struct node *list = t->list[pos];
-    struct node *newNode = (struct node*)malloc(sizeof(struct node));
+    struct node *newNode = (struct node *) malloc(sizeof(struct node));
     struct node *temp = list;
-    while(temp){
-        if(temp->key==key){
+    while (temp) {
+        if (temp->key == key) {
             pthread_mutex_init(&(temp->val), NULL);
             return;
         }
@@ -59,13 +70,14 @@ void insert(struct table *t, char* val_str){
 }
 
 
-pthread_mutex_t lookup(struct table *t,char * val_str){
+//Funkcja szukająca w tablicy mutexa dla danej nazwy pliku. Jeżeli nie odnaleziono, to zostaje utworzony i wstawiony do tablicy
+pthread_mutex_t lookup(struct table *t, char *val_str) {
     int key = convertStrToInt(val_str);
-    int pos = hashCode(t,key);
+    int pos = hashCode(t, key);
     struct node *list = t->list[pos];
     struct node *temp = list;
-    while(temp){
-        if(temp->key==key){
+    while (temp) {
+        if (temp->key == key) {
             return temp->val;
         }
         temp = temp->next;
@@ -73,4 +85,18 @@ pthread_mutex_t lookup(struct table *t,char * val_str){
 
     insert(t, val_str);
     return lookup(t, val_str);
+}
+
+//Funkcja zwalniająca pamięć
+void clearTable(struct table *t){
+    printf("TAK");
+    int size= t->size;
+    int i;
+    for (i = 0; i < size; i++) {
+        free(t->list[i]);
+        printf("Dziala?");
+    }
+
+    free(t->list);
+    free(t);
 }

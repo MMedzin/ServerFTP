@@ -19,8 +19,6 @@
 #define BUF_SIZE 1000
 #define HASH_MAP_SIZE 1000
 #define TIMEOUT_LIMIT 100
-#define CON_LIMIT 3
-
 
 
 // typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
@@ -32,7 +30,7 @@
 // TODO - pozbyć się tych zmiennych (singleton)
 int num_of_conns = 0;
 int exitAll = 0;
-int rep_type = UNSET_TYPE;
+
 
 //struktura zawierająca dane, które zostaną przekazane do wątku
 
@@ -265,7 +263,14 @@ char *getResponse(char *cmd, void *t_data) {
             if (cmd_cut == NULL) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
+
+            file_mutex = lookup((th_data)->mutex_table, cmd_cut);
+            pthread_mutex_lock(&file_mutex);
+
             result = stor_cmd(th_data, cmd_cut);
+            pthread_mutex_unlock(&file_mutex);
+
+
             if (result == 0) {
                 return "250 Requested file action successful.\r\n";
             }
@@ -335,29 +340,26 @@ void *ThreadBehavior(void *t_data) {
         cr_found = 0;
         nl_found = 0;
         sumR = 0;
-        while(cr_found==0 || nl_found==0){
+        while (cr_found == 0 || nl_found == 0) {
             r = (int) read((*th_data).fd, in, sizeof(in));
-            if(r >= 0){
-                if(r == 0){
+            if (r >= 0) {
+                if (r == 0) {
                     timeout_counter--;
-                }
-                else{
+                } else {
                     timeout_counter = TIMEOUT_LIMIT;
                     buff_read[sumR] = in[0];
-                    if(cr_found != 0){
-                        if(in[0] == '\n') {
+                    if (cr_found != 0) {
+                        if (in[0] == '\n') {
                             nl_found = 1;
-                            buff_read[sumR+1] = '\0';
-                        }
-                        else cr_found = 0;
+                            buff_read[sumR + 1] = '\0';
+                        } else cr_found = 0;
                     }
-                    if(in[0] == '\r'){
+                    if (in[0] == '\r') {
                         cr_found = 1;
                     }
                     sumR++;
                 }
-            }
-            else{
+            } else {
                 printf("Wystąpił błąd odczytu, kod błędu: %d", errno);
             }
         }
@@ -372,6 +374,7 @@ void *ThreadBehavior(void *t_data) {
 
     close((*th_data).fd_file_transfer);
 
+    clearTable(th_data->mutex_table);
     free(th_data);
     num_of_conns--;
     pthread_exit(NULL);

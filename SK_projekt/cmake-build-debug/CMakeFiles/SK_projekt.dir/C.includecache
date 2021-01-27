@@ -6,25 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/command_parser.h
-
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/commands.h
-thread_data_t.h
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/thread_data_t.h
-
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/hashmap_threads.h
-
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/main.c
-sys/types.h
--
-sys/socket.h
--
-netinet/in.h
--
-arpa/inet.h
--
-unistd.h
--
+/home/marysia/CLionProjects/SK_projekt/hashmap_threads.c
 stdio.h
 -
 stdlib.h
@@ -33,22 +15,8 @@ string.h
 -
 pthread.h
 -
-errno.h
--
-thread_data_t.h
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/thread_data_t.h
 hashmap_threads.h
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/hashmap_threads.h
-command_parser.h
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/command_parser.h
-thread_data_t.h
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/thread_data_t.h
-commands.h
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/commands.h
+/home/marysia/CLionProjects/SK_projekt/hashmap_threads.h
 
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/thread_data_t.h
-pthread.h
--
-hashmap_threads.h
-/home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/hashmap_threads.h
+/home/marysia/CLionProjects/SK_projekt/hashmap_threads.h
 

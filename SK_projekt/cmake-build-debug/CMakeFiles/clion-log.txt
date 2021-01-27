@@ -1,4 +1,4 @@
-/home/michal/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.6682.181/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt
+/home/marysia/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.6682.181/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/marysia/CLionProjects/SK_projekt
 -- The C compiler identification is GNU 9.3.0
 -- Check for working C compiler: /usr/bin/cc
 -- Check for working C compiler: /usr/bin/cc - works
@@ -8,4 +8,4 @@
 -- Detecting C compile features - done
 -- Configuring done
 -- Generating done
--- Build files have been written to: /home/michal/Documents/studia/semestr_5/SK2/projekt/ServerFTP/SK_projekt/cmake-build-debug
+-- Build files have been written to: /home/marysia/CLionProjects/SK_projekt/cmake-build-debug
