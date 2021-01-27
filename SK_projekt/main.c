@@ -31,8 +31,6 @@ int num_of_conns = 0;
 int exitAll = 0;
 
 
-//struktura zawierająca dane, które zostaną przekazane do wątku
-
 
 // funkcja nawiązująca połączenie z klientem do przesyłu danych i zwracająca deskryptor połączenia
 int createFileTransferConn(char addr[], int port) {
@@ -373,7 +371,8 @@ void *ThreadBehavior(void *t_data) {
 
     close((*th_data).fd_file_transfer);
 
-    clearTable(th_data->mutex_table);
+
+    //clearTable(th_data->mutex_table);
     free(th_data);
     num_of_conns--;
     pthread_exit(NULL);

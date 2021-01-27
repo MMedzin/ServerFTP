@@ -69,6 +69,21 @@ void insert(struct table *t, char *val_str) {
     t->list[pos] = newNode;
 }
 
+int delete(struct table *t, char * val_str){
+    int key = convertStrToInt(val_str);
+    int pos = hashCode(t, key);
+    struct node *list = t->list[pos];
+    struct node *temp = list;
+    while (temp) {
+        if (temp->key == key) {
+            free(temp);
+            return 0;
+        }
+        temp = temp->next;
+    }
+    return -1;
+}
+
 
 //Funkcja szukająca w tablicy mutexa dla danej nazwy pliku. Jeżeli nie odnaleziono, to zostaje utworzony i wstawiony do tablicy
 pthread_mutex_t lookup(struct table *t, char *val_str) {
@@ -93,10 +108,10 @@ void clearTable(struct table *t){
     int size= t->size;
     int i;
     for (i = 0; i < size; i++) {
+        if(t->list[i]!=NULL){
         free(t->list[i]);
-        printf("Dziala?");
+    }
     }
 
     free(t->list);
-    free(t);
 }

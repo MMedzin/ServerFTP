@@ -300,6 +300,10 @@ int dele_cmd(void *thr_data, char* args) {
     strcat(filename, "/");
     strcat(filename, args);
     int err = remove(filename);
+
+    if(err==0){
+        delete((*th_data).mutex_table, args);
+    }
     free(filename);
     return err;
 }
