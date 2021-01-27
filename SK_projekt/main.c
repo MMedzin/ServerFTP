@@ -18,7 +18,6 @@
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
 #define HASH_MAP_SIZE 1000
-#define TIMEOUT_LIMIT 100
 
 
 // typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
@@ -335,7 +334,7 @@ void *ThreadBehavior(void *t_data) {
     char in[1];
     int r, sumR;
     int cr_found, nl_found;
-    int timeout_counter = TIMEOUT_LIMIT;
+    int conn_closed = 0;
     while (1) {
         cr_found = 0;
         nl_found = 0;
@@ -344,9 +343,9 @@ void *ThreadBehavior(void *t_data) {
             r = (int) read((*th_data).fd, in, sizeof(in));
             if (r >= 0) {
                 if (r == 0) {
-                    timeout_counter--;
+                    conn_closed = 1;
+                    break;
                 } else {
-                    timeout_counter = TIMEOUT_LIMIT;
                     buff_read[sumR] = in[0];
                     if (cr_found != 0) {
                         if (in[0] == '\n') {
@@ -363,7 +362,7 @@ void *ThreadBehavior(void *t_data) {
                 printf("Wystąpił błąd odczytu, kod błędu: %d", errno);
             }
         }
-        if (timeout_counter <= 0 || (*th_data).do_exit == 1) break;
+        if (conn_closed != 0 || (*th_data).do_exit == 1) break;
         printf("%s", buff_read);
         buff_write = getResponse(buff_read, th_data);
         printf("%s", buff_write);
