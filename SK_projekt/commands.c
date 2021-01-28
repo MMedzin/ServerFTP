@@ -102,7 +102,7 @@ int stor_cmd(void *thr_data, char *args) {
     fclose(fp);
     free(filename);
     bzero(buffer, BUF_SIZE);
-    bzero(big_buffer, sizeof(big_buffer));
+    free(big_buffer);
 
     return 0;
 }

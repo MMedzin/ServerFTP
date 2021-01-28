@@ -83,6 +83,7 @@ char *getResponse(char *cmd, void *t_data) {
     char file_delim[] = "\r";
     char *saveptr = cmdCopy;
     char *cmd_cut = strtok_r(cmdCopy, delim, &saveptr); // 'wycięcie' nazwy komendy
+    char *filepath; // zmienna zawierająca pełnę ścieżkę do pliku, używana przy znjadowaniu odpowiedniego mutexa
     // zmienne użyteczne przy przetważaniu komend
     char *response = malloc(100);
     char host[16];
@@ -261,12 +262,17 @@ char *getResponse(char *cmd, void *t_data) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
 
-            file_mutex = lookup((th_data)->mutex_table, cmd_cut);
+            filepath = malloc(sizeof((*th_data).working_directory)+sizeof(cmd_cut));
+            strcpy(filepath, (*th_data).working_directory);
+            strcat(filepath, cmd_cut);
+
+            file_mutex = lookup((th_data)->mutex_table, filepath);
             pthread_mutex_lock(&file_mutex);
 
             result = stor_cmd(th_data, cmd_cut);
             pthread_mutex_unlock(&file_mutex);
 
+            free(filepath);
 
             if (result == 0) {
                 return "250 Requested file action successful.\r\n";
@@ -305,12 +311,17 @@ char *getResponse(char *cmd, void *t_data) {
             if (cmd_cut == NULL) {
                 return "501 Syntax error in parameters or arguments.\r\n";
             }
-            file_mutex = lookup((th_data)->mutex_table, cmd_cut);
+            filepath = malloc(sizeof((*th_data).working_directory)+sizeof(cmd_cut));
+            strcpy(filepath, (*th_data).working_directory);
+            strcat(filepath, cmd_cut);
+
+            file_mutex = lookup((th_data)->mutex_table, filepath);
             pthread_mutex_lock(&file_mutex);
 
             result = retr_cmd(t_data, cmd_cut);
 
             pthread_mutex_unlock(&file_mutex);
+            free(filepath);
             if (result == 0) {
                 return "250 Requested file action successful.\r\n";
             }
@@ -473,5 +484,6 @@ int main(int argc, char *argv[]) {
 
 
     close(server_socket_descriptor);
+    clearTable(mutex_table);
     return (0);
 }
