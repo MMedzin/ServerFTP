@@ -56,7 +56,7 @@ int stor_cmd(void *thr_data, char *args) {
     }
 
 
-    if(ferror(fp)!=0){
+    if(fp==NULL || ferror(fp)!=0){
         printf("Cannot open file: %s\r\n", filename);
         free(filename);
         return -1;
@@ -130,6 +130,12 @@ int retr_cmd(void *thr_data, char* args){
         return -1;
     }
 
+    if(fp==NULL || ferror(fp)!=0){
+        printf("Cannot open file: %s\r\n", filename);
+        free(filename);
+        return -1;
+    }
+
     int size;
     fseek(fp, 0, SEEK_END);
     size = ftell(fp);
@@ -137,11 +143,6 @@ int retr_cmd(void *thr_data, char* args){
 
     buffer = malloc(size);
 
-    if(ferror(fp)!=0){
-        printf("Cannot open file: %s\r\n", filename);
-        free(filename);
-        return -1;
-    }
     // TODO dodaj tu coś jak się plik źle otworzy
     //TODO zobaczyć co z tymi buforami kurna
 
