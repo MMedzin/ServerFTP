@@ -5,9 +5,11 @@
 #include "utils.h"
 #include "command_parser.h"
 
+
+//Funkcja odpowiedzialna za zwrócenie kodu komendy
 int commandCode(char* cmd)
 {
-    strToUpper(cmd);
+    str_upper(cmd);
     printf("CommandCode generation...\n");
     if(strcmp(cmd, "USER") == 0){
         printf("USER cmd recognized\n");
@@ -71,9 +73,6 @@ int commandCode(char* cmd)
     }
     else if(strcmp(cmd, "RETR")==0){
         printf("RETR cmd recognized\n");
-        return RETR_CMD;
-    }else if(strcmp(cmd, "SIZE")==0){
-        printf("SIZE cmd recognized\n");
         return RETR_CMD;
     }
     else{

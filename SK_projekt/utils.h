@@ -5,8 +5,6 @@
 #ifndef SK_PROJEKT_UTILS_H
 #define SK_PROJEKT_UTILS_H
 
-void strToUpper(char str[]);
-void transformFilename(char filename[]);
-int transformPortNumber(char p1[], char p2[]);
+void str_upper(char *str);
 
 #endif //SK_PROJEKT_UTILS_H

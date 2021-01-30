@@ -20,7 +20,7 @@
 #define HASH_MAP_SIZE 1000
 
 
-// typy reprezentacji -- na razie tylko zapisywane, wspierany jest wyłącznie tryb ASCII
+// typy reprezentacji
 #define ASCII_TYPE 1
 #define IMAGE_TYPE 2
 #define UNSET_TYPE (-1)
@@ -30,7 +30,7 @@
 int num_of_conns = 0;
 int exitAll = 0;
 
-
+//TODO przejrzeć ogólnie i wyłapać błędy
 
 // funkcja nawiązująca połączenie z klientem do przesyłu danych i zwracająca deskryptor połączenia
 int createFileTransferConn(char addr[], int port) {
@@ -69,8 +69,6 @@ void *tempClose(void *th_data) {
     pthread_exit(NULL);
 }
 
-
-// funkcja rozpoznająca przychodzące komendy ftp i zwracająca odpowidający im kod
 
 // funkcja zwracająca odpoowiedź na daną komendę, a także wywołująca odpowiednie operacje związane z tą komendą
 char *getResponse(char *cmd, void *t_data) {
@@ -163,7 +161,7 @@ char *getResponse(char *cmd, void *t_data) {
                         if (*(cmd_cut + i) == '\0') break;
                     }
                     p2[3] = '\0';
-                    portNum = transformPortNumber(p1, p2);
+                    portNum = transform_port_number(p1, p2);
                     free((*th_data).file_transfer_address);
                     (*th_data).file_transfer_address = malloc(sizeof(host));
                     strcpy((*th_data).file_transfer_address, host);

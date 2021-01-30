@@ -1,7 +1,3 @@
-//
-// Created by marysia on 20.01.2021.
-//
-
 #include "thread_data_t.h"
 #ifndef SK_PROJEKT_COMMANDS_H
 #define SK_PROJEKT_COMMANDS_H
@@ -19,6 +15,6 @@ int cdup_cmd(void *thr_data);
 int cwd_cmd(void *thr_data, char* args);
 int mkd_cmd(void *thr_data, char* args);
 void * sendList(void *t_data);
-int transformPortNumber(char p1[], char p2[]);
+int transform_port_number(char *p1, char *p2);
 
 #endif //SK_PROJEKT_COMMANDS_H
