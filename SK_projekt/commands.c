@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ftw.h>
+#include <errno.h>
+
 #define BUF_SIZE 1000
 
 //Komenda, która sprawdza poprawność nazwy użytkownika i tworzy directory o takiej nazwie
@@ -13,7 +15,7 @@ int user_cmd(void *thr_data, char* args){
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
     char *dir_name = args;
     if(mkdir(dir_name, 0777)==-1){
-        return -1;
+        printf("\"%s\" directory already exists\n", dir_name);
     }
     (*th_data).username = USER;
     strcpy((*th_data).working_directory, "/");
@@ -22,12 +24,14 @@ int user_cmd(void *thr_data, char* args){
     return 0;
 }
 
-//Komenda, która odbiera plik od klienta i zapisuje go na serwerze
-//TODO objaśnienia do tej metody-> MICHAŁ
+// Komenda, która odbiera plik od klienta i zapisuje go na serwerze;
+// funkcja przyjmuje zawartość pliku od klienta i zapisuje ją pod wskazaną ściężką;
+// w zależnosci od ustalonego sposobu przesyłania (komenda TYPE) plik jest traktowany jako binarny (tryb IMAGE) lub
+// jako tekstowy (tryb ASCII)
 int stor_cmd(void *thr_data, char *args) {
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
     char * filename;
-    filename = calloc(strlen((*th_data).working_directory) + strlen(args) + 2, sizeof(char));
+    filename = calloc(strlen((*th_data).working_directory) + strlen(args) + 3, sizeof(char));
     strcpy(filename, ".");
     strcat(filename, (*th_data).working_directory);
     strcat(filename, "/");
@@ -35,7 +39,7 @@ int stor_cmd(void *thr_data, char *args) {
 
     FILE *fp;
     char buffer[BUF_SIZE];
-    char* big_buffer=malloc(BUF_SIZE*sizeof(char));
+    char* big_buffer=malloc(BUF_SIZE*sizeof(char)); // bufor przechowujacy całość pobieranego pliku
 
     if((*th_data).transfer_mode==1) {
         fp = fopen(filename, "w");
@@ -47,7 +51,7 @@ int stor_cmd(void *thr_data, char *args) {
     }
 
     if(fp==NULL || ferror(fp)!=0){
-        printf("Cannot open file: %s\r\n", filename);
+        printf("Cannot open file: %s\n", filename);
         free(filename);
         free(big_buffer);
         return -1;
@@ -62,7 +66,7 @@ int stor_cmd(void *thr_data, char *args) {
         if(rec_bytes==0){
             break;
         }else if(rec_bytes == -1){
-            printf("Error while reading from client...\n\r");
+            printf("Error while reading from client...\n");
             free(filename);
             free(big_buffer);
             return -1;
@@ -78,6 +82,7 @@ int stor_cmd(void *thr_data, char *args) {
                 sum+=rec_bytes;
             }
         }else {
+            // rozmiar big_buffer jest odpowiednio powiększany przed każdym zapisianiem
             big_buffer = realloc(big_buffer, n*BUF_SIZE*sizeof(char));
             if((*th_data).transfer_mode==1){
                 buffer[rec_bytes] = '\0';
@@ -92,7 +97,7 @@ int stor_cmd(void *thr_data, char *args) {
         n++;
     }
 
-    strcat(big_buffer, "\0");
+//    strcat(big_buffer, "\0");
     fwrite(big_buffer, 1, sum, fp);
 
     n= fclose(fp);
@@ -102,19 +107,22 @@ int stor_cmd(void *thr_data, char *args) {
     free(big_buffer);
 
     if(n!=0) {
-        printf("Error while closing the file...\n\r");
+        printf("Error while closing the file...\n");
         return -1;
     }
 
     return 0;
 }
 
-//Komenda, która pozwala przesłać plik do klienta
+// Komenda, która pozwala przesłać plik do klienta;
+// funkcja odczytuje wskazany plik i przesyła jego zawartosć do klienta;
+// w zależnosci od ustalonego sposobu przesyłania (komenda TYPE) plik jest przesyłany jako binarny (tryb IMAGE) lub
+// jako tekstowy (tryb ASCII)
 int retr_cmd(void *thr_data, char* args){
 
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
     char * filename;
-    filename = calloc(strlen((*th_data).working_directory) + strlen(args) + 2, sizeof(char));
+    filename = calloc(strlen((*th_data).working_directory) + strlen(args) + 3, sizeof(char));
     strcpy(filename, ".");
     strcat(filename, (*th_data).working_directory);
     strcat(filename, "/");
@@ -134,7 +142,7 @@ int retr_cmd(void *thr_data, char* args){
     }
 
     if(fp==NULL || ferror(fp)!=0){
-        printf("Cannot open file: %s\r\n", filename);
+        printf("Cannot open file: %s\n", filename);
         free(filename);
         return -1;
     }
@@ -150,7 +158,7 @@ int retr_cmd(void *thr_data, char* args){
     int n = (int) fread(buffer, sizeof(char), size, fp);
 
     if(n==-1){
-        printf("Error while reading file: %s\r\n", filename);
+        printf("Error while reading file: %s\n", filename);
         free(filename);
         fclose(fp);
         free(buffer);
@@ -159,7 +167,7 @@ int retr_cmd(void *thr_data, char* args){
 
     int result = write((*th_data).fd_file_transfer, buffer, n);
     if(result==-1){
-        printf("Error while writting to client...\n\r");
+        printf("Error while writting to client...\n");
         fclose(fp);
         free(filename);
         free(buffer);
@@ -178,7 +186,7 @@ int retr_cmd(void *thr_data, char* args){
     free(buffer);
 
     if(n!=0) {
-        printf("Error while closing the file...\n\r");
+        printf("Error while closing the file...\n");
         return -1;
     }
 
@@ -188,7 +196,7 @@ int retr_cmd(void *thr_data, char* args){
 //Komenda pozwalająca usunąć katalog
 int rmd_cmd(void *thr_data, char *args) {
     struct thread_data_t *th_data = (struct thread_data_t *) thr_data;
-    char *pathToDir = calloc(strlen((*th_data).working_directory) + strlen(args) + 2, sizeof(char));
+    char *pathToDir = calloc(strlen((*th_data).working_directory) + strlen(args) + 3, sizeof(char));
     strcat(pathToDir, ".");
     strcat(pathToDir, (*th_data).working_directory);
     strcat(pathToDir, "/");
@@ -196,11 +204,11 @@ int rmd_cmd(void *thr_data, char *args) {
     printf("Removing %s...\n", pathToDir);
 
     if(rmdir(pathToDir)!=0){
-        printf("Error while trying to remove directory...\n\r");
+        printf("Error while trying to remove directory...\n");
         free(pathToDir);
         return -1;
     }
-
+    free(pathToDir);
     return 0;
 }
 
@@ -217,48 +225,73 @@ int list_cmd(void *thr_data){
     strcpy(t_data->working_directory, (*th_data).working_directory);
     t_data->fd_file_transfer = (*th_data).fd_file_transfer;
     int create_result;
-    create_result = pthread_create(&thread, NULL, sendList, (void *)t_data);
+    create_result = pthread_create(&thread, NULL, send_list, (void *) t_data);
     if (create_result){
-        printf("Błąd przy próbie utworzenia wątku przesyłania listy, kod błędu: %d\n", create_result);
-        return -1; //TODO tu było exit?? chcesz kończyć cały program?
+        printf("Error while creating list command thread, error code: %d\n", create_result);
+        return -1;
     }
     return 0;
 }
 
-//TODO dodaj komentarze
-//Funkcja definiująca zachowanie wątku odpowiedzialnego za przesłanie listy
-void *sendList(void *t_data) {
+// Funkcja definiująca zachowanie wątku odpowiedzialnego za przesłanie listy
+// przesyła listę plików wskazanej lokalizacji w systemie do klienta
+void *send_list(void *t_data) {
 
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
 
     FILE *fp;
     char path[1035];
+    // składanie komendy tekstu komendy ls używanej do pozyskania listy
     char command[1047] = "/bin/ls -l '.";
     strcat(command, (*th_data).working_directory);
     strcat(command, "'");
     fp = popen(command, "r");
+    int chk;
     if(fp==NULL || ferror(fp)!=0){
-        printf("Cannot read directory: %s\r\n", command);
-        return -1;
+        printf("Cannot read directory: %s\n", command);
+        close((*th_data).fd_file_transfer);
+        free(th_data);
+        pthread_exit(NULL);
     }
 
     else{
         unsigned long i;
+        // przesyłanie kolejno wszystkich elementów na liście do klienta
         while (fgets(path, sizeof(path), fp) != NULL){
             i = strlen(path);
             path[i-1] = '\r';
             path[i] = '\n';
             path[i+1] = '\0';
-            write((*th_data).fd_file_transfer, path, strlen(path));
+            chk = write((*th_data).fd_file_transfer, path, strlen(path));
+            if(chk == -1) {
+                printf("Write operation failed (directory listing), error code: %d\n", errno);
+                pclose(fp);
+                close((*th_data).fd_file_transfer);
+                free(th_data);
+                pthread_exit(NULL);
+            }
         }
-        pclose(fp);
+        chk = pclose(fp);
+        if(chk == -1){
+            printf("Cannot close directory: %s, error code: %d\n", command, errno);
+            close((*th_data).fd_file_transfer);
+            free(th_data);
+            pthread_exit(NULL);
+        }
     }
 
-    //TODO dodać obłsugę błędów pclose, close, write
-    close((*th_data).fd_file_transfer);
-    write((*th_data).fd, "226 Transfer complete.\r\n", strlen("226 Transfer complete.\r\n"));
-    printf("226 Transfer complete.\r\n");
+    chk = close((*th_data).fd_file_transfer);
+    if(chk != 0){
+        printf("Data connection closing failed, error code: %d\n", errno);
+    }
+    chk = write((*th_data).fd, "226 Transfer complete.\r\n", strlen("226 Transfer complete.\r\n"));
+    if(chk == -1){
+        printf("Write operation failed (ftp transfer complete response), error code: %d", errno);
+    }
+    else{
+        printf("226 Transfer complete.\r\n");
+    }
     free(th_data);
     pthread_exit(NULL);
 }
@@ -301,7 +334,7 @@ int mkd_cmd(void *thr_data, char* args){
     struct thread_data_t *th_data = (struct thread_data_t*)thr_data;
     char *new_directory;
 
-    new_directory= malloc(strlen((*th_data).working_directory) * sizeof(char) + strlen(args) * sizeof(char) + 1);
+    new_directory= malloc((strlen((*th_data).working_directory) + strlen(args) + 3) * sizeof(char));
     strcpy(new_directory, ".");
     strcat(new_directory, (*th_data).working_directory);
     strcat(new_directory, "/");
@@ -309,7 +342,7 @@ int mkd_cmd(void *thr_data, char* args){
     int err = mkdir(new_directory, 0777);
 
     if(err!=0){
-        printf("Error while creating directory: %s\n\r", new_directory);
+        printf("Error while creating directory: %s\n", new_directory);
         free(new_directory);
         return -1;
     }
@@ -322,7 +355,7 @@ int mkd_cmd(void *thr_data, char* args){
 int dele_cmd(void *thr_data, char* args) {
     struct thread_data_t *th_data = (struct thread_data_t *) thr_data;
     char *filename;
-    filename = calloc(strlen((*th_data).working_directory) + strlen(args) + 2, sizeof(char));
+    filename = calloc(strlen((*th_data).working_directory) + strlen(args) + 3, sizeof(char));
     strcpy(filename, ".");
     strcat(filename, (*th_data).working_directory);
     strcat(filename, "/");
@@ -355,7 +388,7 @@ int transform_port_number(char *p1, char *p2){
 //Funkcja zmieniająca working directory
 int cwd_cmd(void *thr_data, char*args) {
     struct thread_data_t *th_data = (struct thread_data_t *) thr_data;
-    printf("NAZWA DIR W CWD: %s", args);
+    printf("NAZWA DIR W CWD: %s\n", args);
     if (args != NULL) {
         if(strcmp(args, "/")==0){
             return -1;

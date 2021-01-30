@@ -14,7 +14,7 @@ int list_cmd(void *thr_data);
 int cdup_cmd(void *thr_data);
 int cwd_cmd(void *thr_data, char* args);
 int mkd_cmd(void *thr_data, char* args);
-void * sendList(void *t_data);
+void * send_list(void *t_data);
 int transform_port_number(char *p1, char *p2);
 
 #endif //SK_PROJEKT_COMMANDS_H

@@ -27,7 +27,7 @@ struct table *createTable(int size) {
     t->list = (struct node **) malloc(sizeof(struct node *) * size);
     int i;
     for (i = 0; i < size; i++)
-        t->list[i] = NULL;
+        t->list[i] = calloc(1, sizeof(struct node));
     return t;
 }
 
@@ -66,6 +66,7 @@ void insert(struct table *t, char *val_str) {
     newNode->key = key;
     pthread_mutex_init(&(newNode->val), NULL);
     newNode->next = list;
+    free(t->list[pos]);
     t->list[pos] = newNode;
 }
 
@@ -76,7 +77,8 @@ int delete(struct table *t, char * val_str){
     struct node *temp = list;
     while (temp) {
         if (temp->key == key) {
-            free(temp);
+            free(t->list[pos]);
+            t->list[pos] = calloc(1, sizeof(struct node));
             return 0;
         }
         temp = temp->next;
@@ -104,14 +106,14 @@ pthread_mutex_t lookup(struct table *t, char *val_str) {
 
 //Funkcja zwalniająca pamięć
 void clearTable(struct table *t){
-    printf("TAK");
     int size= t->size;
     int i;
     for (i = 0; i < size; i++) {
         if(t->list[i]!=NULL){
-        free(t->list[i]);
-    }
+            free(t->list[i]);
+        }
     }
 
     free(t->list);
+    free(t);
 }

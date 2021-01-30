@@ -7,7 +7,7 @@
 
 
 //Funkcja odpowiedzialna za zwrócenie kodu komendy
-int commandCode(char* cmd)
+int command_code(char* cmd)
 {
     str_upper(cmd);
     printf("CommandCode generation...\n");
