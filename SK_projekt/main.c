@@ -272,8 +272,8 @@ char *get_response(char *cmd, void *t_data) {
                 sprintf(response, "425 Can't open data connection.\r\n");
                 return response;
             } else {
-                write((th_data)->fd, "150 Opening data connection for file list.\r\n",
-                      strlen("150 Opening ASCII mode data connection for file list.\r\n"));
+                write((th_data)->fd, "150 Opening data connection.\r\n",
+                      strlen("150 Opening data connection.\r\n"));
             }
 
             cmd_cut = strtok_r(NULL, file_delim, &saveptr);
@@ -329,8 +329,8 @@ char *get_response(char *cmd, void *t_data) {
                 sprintf(response, "425 Can't open data connection.\r\n");
                 return response;
             } else {
-                write((th_data)->fd, "150 Opening data connection for file list.\r\n",
-                      strlen("150 Opening ASCII mode data connection for file list.\r\n"));
+                write((th_data)->fd, "150 Opening data connection.\r\n",
+                      strlen("150 Opening data connection.\r\n"));
             }
             cmd_cut = strtok_r(NULL, file_delim, &saveptr);
 
