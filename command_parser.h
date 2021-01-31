@@ -24,6 +24,6 @@
 #define RETR_CMD 16
 #define UNKNOWN_CMD (-1)
 
-int command_code(char* cmd);
+int command_code(char *cmd);
 
 #endif //SK_PROJEKT_COMMAND_PARSER_H

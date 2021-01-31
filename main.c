@@ -11,9 +11,7 @@
 #include <fcntl.h>
 
 #include "thread_data_t.h"
-#include "hashmap_threads.h"
 #include "command_parser.h"
-#include "thread_data_t.h"
 #include "commands.h"
 
 #define QUEUE_SIZE 5
@@ -24,7 +22,6 @@
 // typy reprezentacji
 #define ASCII_TYPE 1
 #define IMAGE_TYPE 2
-#define UNSET_TYPE (-1)
 
 // zmienne globalne potrzebnych danych
 int num_of_conns = 0;
@@ -87,7 +84,7 @@ char *get_response(char *cmd, void *t_data) {
     char p2[4];
     int port_num;
     int result;
-    if(exit_all == 1){
+    if (exit_all == 1) {
         (*th_data).do_exit = 1;
         sprintf(response, "421 Service not available, closing control connection.\r\n");
         return response;
@@ -283,7 +280,7 @@ char *get_response(char *cmd, void *t_data) {
                 return response;
             }
 
-            filepath = malloc(sizeof((*th_data).working_directory)+sizeof(cmd_cut));
+            filepath = malloc(sizeof((*th_data).working_directory) + sizeof(cmd_cut));
             strcpy(filepath, (*th_data).working_directory);
             strcat(filepath, cmd_cut);
 
@@ -338,7 +335,7 @@ char *get_response(char *cmd, void *t_data) {
                 sprintf(response, "501 Syntax error in parameters or arguments.\r\n");
                 return response;
             }
-            filepath = malloc(sizeof((*th_data).working_directory)+sizeof(cmd_cut));
+            filepath = malloc(sizeof((*th_data).working_directory) + sizeof(cmd_cut));
             strcpy(filepath, (*th_data).working_directory);
             strcat(filepath, cmd_cut);
 
@@ -405,7 +402,7 @@ void *thread_behavior(void *t_data) {
         if (conn_closed != 0 || (*th_data).do_exit == 1) break;
         printf("%s", buff_read);
         buff_write = get_response(buff_read, th_data);
-        printf("%s", buff_write);
+        printf("%s\n", buff_write);
         write((*th_data).fd, buff_write, strlen(buff_write));
         free(buff_write);
     }
@@ -450,7 +447,7 @@ void handle_connection(int connection_socket_descriptor, struct table *mutex_tab
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        printf("Invalid arguments. Correct use: ./server <IPv4 ADDR> <PORT NUMBER>\n");
+        printf("Invalid arguments. Correct use: ./server.out <IPv4 ADDR> <PORT NUMBER>\n");
         exit(-1);
     }
     int port_num = atoi(argv[2]);
@@ -476,7 +473,7 @@ int main(int argc, char *argv[]) {
     memset(&server_address, 0, sizeof(struct sockaddr));
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_address.sin_port = htons(atoi(argv[2]));
+    server_address.sin_port = htons((uint16_t) atoi(argv[2]));
 
     if (inet_pton(AF_INET, argv[1], &(server_address.sin_addr)) <= 0) {
         printf("Invalid IP address!\n");
@@ -489,8 +486,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     int flags;
-    flags = fcntl(server_socket_descriptor,F_GETFL,0);
-    if(flags == -1){
+    flags = fcntl(server_socket_descriptor, F_GETFL, 0);
+    if (flags == -1) {
         printf("Obtaining server socket flags failed.\n");
         exit(-1);
     }
@@ -511,11 +508,11 @@ int main(int argc, char *argv[]) {
 
 
     pthread_t tempThread;
-    pthread_create(&tempThread, NULL, temp_close, NULL);
+    pthread_create(&tempThread, NULL, (void *(*)(void *)) temp_close, NULL);
 
     while (exit_all != 1) {
         connection_socket_descriptor = accept(server_socket_descriptor, NULL, NULL);
-        if(connection_socket_descriptor >= 0){
+        if (connection_socket_descriptor >= 0) {
             write(connection_socket_descriptor, "220 Service ready for new user.\n",
                   strlen("220 Service ready for new user.\n"));
             num_of_conns++;
@@ -523,7 +520,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    while(num_of_conns>0);
+    while (num_of_conns > 0);
 
     pthread_join(tempThread, NULL);
     close(server_socket_descriptor);

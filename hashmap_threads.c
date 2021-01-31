@@ -40,7 +40,7 @@ int hashCode(struct table *t, int key) {
 
 //Zamiana stringa w integera, sumując po kodach ASCII
 int convertStrToInt(char *name) {
-    int size = strlen(name);
+    int size = (int) strlen(name);
     int sum = 0;
     for (int i = 0; i < size; i++) {
         sum += (int) name[i];
@@ -70,7 +70,7 @@ void insert(struct table *t, char *val_str) {
     t->list[pos] = newNode;
 }
 
-int delete(struct table *t, char * val_str){
+int delete(struct table *t, char *val_str) {
     int key = convertStrToInt(val_str);
     int pos = hashCode(t, key);
     struct node *list = t->list[pos];
@@ -105,11 +105,11 @@ pthread_mutex_t lookup(struct table *t, char *val_str) {
 }
 
 //Funkcja zwalniająca pamięć
-void clearTable(struct table *t){
-    int size= t->size;
+void clearTable(struct table *t) {
+    int size = t->size;
     int i;
     for (i = 0; i < size; i++) {
-        if(t->list[i]!=NULL){
+        if (t->list[i] != NULL) {
             free(t->list[i]);
         }
     }
