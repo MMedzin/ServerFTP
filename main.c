@@ -16,7 +16,7 @@
 
 #define QUEUE_SIZE 5
 #define BUF_SIZE 1000
-#define HASH_MAP_SIZE 1000
+#define HASH_MAP_SIZE 2000
 
 
 // typy reprezentacji
@@ -33,7 +33,7 @@ int create_file_transfer_conn(char *addr, int port) {
 
     int conn_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (conn_socket == -1) {
-        printf("Socket could not be created.\nErrorcode: %d\n", errno);
+        printf("Socket could not be created, error code: %d\n", errno);
     } else {
         memset(&server_addr, 0, sizeof(struct sockaddr_in));
         server_addr.sin_family = AF_INET;
@@ -43,7 +43,7 @@ int create_file_transfer_conn(char *addr, int port) {
 
         int conn_status = connect(conn_socket, (struct sockaddr *) &server_addr, sizeof(struct sockaddr));
         if (conn_status) {
-            printf("Cannot connect to host.\n Error code: %d\n", errno);
+            printf("Cannot connect to host, error code: %d\n", errno);
             return -1;
         }
     }
@@ -213,7 +213,24 @@ char *get_response(char *cmd, void *t_data) {
             return response;
         case (RMD_CMD):
             cmd_cut = strtok_r(NULL, file_delim, &saveptr);
+            if (cmd_cut == NULL) {
+                sprintf(response, "501 Syntax error in parameters or arguments.\r\n");
+                return response;
+            }
+
+            filepath = malloc(sizeof((*th_data).working_directory) + sizeof(cmd_cut));
+            strcpy(filepath, (*th_data).working_directory);
+            strcat(filepath, cmd_cut);
+
+            file_mutex = lookup((th_data)->mutex_table, filepath);
+            pthread_mutex_lock(&file_mutex);
+
             result = rmd_cmd(th_data, cmd_cut);
+
+            pthread_mutex_unlock(&file_mutex);
+
+            free(filepath);
+
             if (result == 0) {
                 sprintf(response, "250 Directory removed.\r\n");
                 return response;
@@ -251,7 +268,16 @@ char *get_response(char *cmd, void *t_data) {
                 return response;
             }
 
+            filepath = malloc(sizeof((*th_data).working_directory) + sizeof(cmd_cut));
+            strcpy(filepath, (*th_data).working_directory);
+            strcat(filepath, cmd_cut);
+
+            file_mutex = lookup((th_data)->mutex_table, filepath);
+            pthread_mutex_lock(&file_mutex);
+
             result = mkd_cmd(th_data, cmd_cut);
+            pthread_mutex_unlock(&file_mutex);
+            free(filepath);
 
             if (result == 0) {
                 sprintf(response, "257 \"%s\" created\r\n", cmd_cut);
@@ -302,12 +328,17 @@ char *get_response(char *cmd, void *t_data) {
         case DELE_CMD:
             cmd_cut = strtok_r(NULL, file_delim, &saveptr);
 
-            file_mutex = lookup((th_data)->mutex_table, cmd_cut);
+            filepath = malloc(sizeof((*th_data).working_directory) + sizeof(cmd_cut));
+            strcpy(filepath, (*th_data).working_directory);
+            strcat(filepath, cmd_cut);
+
+            file_mutex = lookup((th_data)->mutex_table, filepath);
             pthread_mutex_lock(&file_mutex);
 
             result = dele_cmd(th_data, cmd_cut);
 
             pthread_mutex_unlock(&file_mutex);
+            free(filepath);
             if (cmd_cut == NULL) {
                 sprintf(response, "501 Syntax error in parameters or arguments.\r\n");
                 return response;
@@ -417,7 +448,6 @@ void *thread_behavior(void *t_data) {
     free(th_data);
     num_of_conns--;
     printf(" done\n");
-    pthread_join(pthread_self(), NULL);
     pthread_exit(NULL);
 }
 
@@ -485,13 +515,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "%s: Socket creation failed.\n", argv[0]);
         exit(1);
     }
-    int flags;
-    flags = fcntl(server_socket_descriptor, F_GETFL, 0);
-    if (flags == -1) {
-        printf("Obtaining server socket flags failed.\n");
-        exit(-1);
-    }
-    fcntl(server_socket_descriptor, F_SETFL, flags | O_NONBLOCK);
+
     setsockopt(server_socket_descriptor, SOL_SOCKET, SO_REUSEADDR, &reuse_addr_val, sizeof(reuse_addr_val));
 
     bind_result = bind(server_socket_descriptor, (struct sockaddr *) &server_address, sizeof(struct sockaddr));
@@ -506,7 +530,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-
     pthread_t tempThread;
     pthread_create(&tempThread, NULL, (void *(*)(void *)) temp_close, NULL);
 
@@ -516,14 +539,15 @@ int main(int argc, char *argv[]) {
             write(connection_socket_descriptor, "220 Service ready for new user.\n",
                   strlen("220 Service ready for new user.\n"));
             num_of_conns++;
+            printf("New connection, pending connections: %d\n", num_of_conns);
             handle_connection(connection_socket_descriptor, mutex_table);
         }
     }
 
     while (num_of_conns > 0);
 
-    pthread_join(tempThread, NULL);
     close(server_socket_descriptor);
     clearTable(mutex_table);
+    printf("closing server...\n");
     return (0);
 }

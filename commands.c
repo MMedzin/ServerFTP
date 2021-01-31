@@ -94,7 +94,6 @@ int stor_cmd(void *thr_data, char *args) {
         n++;
     }
 
-//    strcat(big_buffer, "\0");
     fwrite(big_buffer, 1, (size_t) sum, fp);
 
     n = fclose(fp);
@@ -194,14 +193,14 @@ int retr_cmd(void *thr_data, char *args) {
 int rmd_cmd(void *thr_data, char *args) {
     struct thread_data_t *th_data = (struct thread_data_t *) thr_data;
     char *pathToDir = calloc(strlen((*th_data).working_directory) + strlen(args) + 3, sizeof(char));
-    strcat(pathToDir, ".");
+    strcpy(pathToDir, ".");
     strcat(pathToDir, (*th_data).working_directory);
     strcat(pathToDir, "/");
     strcat(pathToDir, args);
     printf("Removing %s...\n", pathToDir);
 
     if (rmdir(pathToDir) != 0) {
-        printf("Error while trying to remove directory...\n");
+        printf("Error while trying to remove directory, error code: %d\n", errno);
         free(pathToDir);
         return -1;
     }
