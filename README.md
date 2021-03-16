@@ -1,6 +1,8 @@
 # ServerFTP
-## Maria Mikołajczak
-## Michał Mędzin
+
+Project developed by:
+- Maria Mikołajczak
+- Michał Mędzin
 
 ### Description
 Simple ftp server based on BSD sockets. Server is compliant with ```RFC 959``` standard.
